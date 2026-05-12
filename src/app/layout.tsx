@@ -26,7 +26,7 @@ export default function RootLayout({
           {children}
         </main>
         <footer className="py-6 text-center text-muted-foreground text-sm border-t mt-auto">
-          <p>&copy; 2026 KasMahasiswa Pro. Build by Alfan mahasiswa University Slamat Sri</p>
+          <p>&copy; 2026 KasMahasiswa Pro. Build by Alfan mahasiswa (Universitas Slamat Sri).</p>
         </footer>
         <Toaster />
       </body>
