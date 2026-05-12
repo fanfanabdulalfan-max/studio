@@ -47,7 +47,9 @@ const analyzeFinancialTrendsPrompt = ai.definePrompt({
   prompt: `You are an AI Treasury Assistant. Your task is to analyze the provided financial transaction history, summarize monthly trends, and suggest budget adjustments.
 
 Financial Transaction History:
-{{{JSON.stringify transactions}}}
+{{#each transactions}}
+- Date: {{date}}, Type: {{type}}, Amount: {{amount}}, Description: {{description}}
+{{/each}}
 
 Please perform the following steps:
 1. Group the transactions by month (YYYY-MM).
