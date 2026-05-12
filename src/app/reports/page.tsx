@@ -35,7 +35,7 @@ export default function ReportsPage() {
     if (data.students.length > 0) {
       csvRows.push("REKAPITULASI PEMBAYARAN KAS MAHASISWA");
       const weeks = Array.from({ length: 16 }, (_, i) => i + 1);
-      const headers = ["ID", "Nama", ...weeks.map(w => `Mgg ${w}`), "Total Bayar"];
+      const headers = ["NIM", "Nama", ...weeks.map(w => `Mgg ${w}`), "Total Bayar"];
       csvRows.push(headers.join(","));
       
       data.students.forEach(student => {
@@ -44,10 +44,10 @@ export default function ReportsPage() {
           return p ? p.amount : 0;
         });
         const total = studentPayments.reduce((a, b) => a + b, 0);
-        csvRows.push([student.id, `"${student.name}"`, ...studentPayments, total].join(","));
+        csvRows.push([`"${student.nim}"`, `"${student.name}"`, ...studentPayments, total].join(","));
       });
-      csvRows.push(""); // Baris kosong sebagai pemisah
-      csvRows.push(""); // Baris kosong sebagai pemisah
+      csvRows.push(""); 
+      csvRows.push(""); 
     }
 
     // Bagian 2: Laporan Pengeluaran

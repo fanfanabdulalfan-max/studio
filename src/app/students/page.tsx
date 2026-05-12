@@ -31,6 +31,7 @@ export default function StudentsPage() {
 
   const [search, setSearch] = useState("");
   const [newStudentName, setNewStudentName] = useState("");
+  const [newStudentNim, setNewStudentNim] = useState("");
   const [editingStudent, setEditingStudent] = useState<Student | null>(null);
   const [studentToDelete, setStudentToDelete] = useState<Student | null>(null);
   const [isAddOpen, setIsAddOpen] = useState(false);
@@ -38,17 +39,23 @@ export default function StudentsPage() {
   if (!isHydrated) return null;
 
   const filteredStudents = data.students.filter((s) =>
-    s.name.toLowerCase().includes(search.toLowerCase())
+    s.name.toLowerCase().includes(search.toLowerCase()) || 
+    s.nim.toLowerCase().includes(search.toLowerCase())
   );
 
   const handleAddStudent = () => {
-    if (!newStudentName.trim()) return;
+    if (!newStudentName.trim() || !newStudentNim.trim()) {
+      toast({ variant: "destructive", title: "Gagal", description: "Nama dan NIM harus diisi." });
+      return;
+    }
     const newStudent: Student = {
       id: crypto.randomUUID(),
       name: newStudentName.trim(),
+      nim: newStudentNim.trim(),
     };
     setData({ ...data, students: [...data.students, newStudent] });
     setNewStudentName("");
+    setNewStudentNim("");
     setIsAddOpen(false);
     toast({ title: "Berhasil", description: `Mahasiswa ${newStudent.name} ditambahkan.` });
   };
@@ -67,13 +74,13 @@ export default function StudentsPage() {
   };
 
   const handleUpdateStudent = () => {
-    if (!editingStudent || !editingStudent.name.trim()) return;
+    if (!editingStudent || !editingStudent.name.trim() || !editingStudent.nim.trim()) return;
     setData({
       ...data,
       students: data.students.map((s) => (s.id === editingStudent.id ? editingStudent : s)),
     });
     setEditingStudent(null);
-    toast({ title: "Berhasil", description: "Nama mahasiswa diperbarui." });
+    toast({ title: "Berhasil", description: "Data mahasiswa diperbarui." });
   };
 
   return (
@@ -95,14 +102,23 @@ export default function StudentsPage() {
             <DialogHeader>
               <DialogTitle>Tambah Mahasiswa Baru</DialogTitle>
             </DialogHeader>
-            <div className="py-4">
-              <label className="text-sm font-medium mb-1 block">Nama Lengkap</label>
-              <Input 
-                value={newStudentName} 
-                onChange={(e) => setNewStudentName(e.target.value)}
-                placeholder="Masukkan nama mahasiswa..."
-                onKeyDown={(e) => e.key === "Enter" && handleAddStudent()}
-              />
+            <div className="space-y-4 py-4">
+              <div className="space-y-2">
+                <label className="text-sm font-medium">NIM</label>
+                <Input 
+                  value={newStudentNim} 
+                  onChange={(e) => setNewStudentNim(e.target.value)}
+                  placeholder="Masukkan NIM..."
+                />
+              </div>
+              <div className="space-y-2">
+                <label className="text-sm font-medium">Nama Lengkap</label>
+                <Input 
+                  value={newStudentName} 
+                  onChange={(e) => setNewStudentName(e.target.value)}
+                  placeholder="Masukkan nama mahasiswa..."
+                />
+              </div>
             </div>
             <DialogFooter>
               <Button variant="outline" onClick={() => setIsAddOpen(false)}>Batal</Button>
@@ -118,7 +134,7 @@ export default function StudentsPage() {
             <Search className="absolute left-2.5 top-2.5 h-4 w-4 text-muted-foreground" />
             <Input
               type="search"
-              placeholder="Cari nama mahasiswa..."
+              placeholder="Cari nama atau NIM..."
               className="pl-8"
               value={search}
               onChange={(e) => setSearch(e.target.value)}
@@ -130,6 +146,7 @@ export default function StudentsPage() {
             <TableHeader>
               <TableRow>
                 <TableHead className="w-[80px]">No.</TableHead>
+                <TableHead>NIM</TableHead>
                 <TableHead>Nama Mahasiswa</TableHead>
                 <TableHead className="text-right">Aksi</TableHead>
               </TableRow>
@@ -139,6 +156,7 @@ export default function StudentsPage() {
                 filteredStudents.map((student, index) => (
                   <TableRow key={student.id}>
                     <TableCell className="font-medium">{index + 1}</TableCell>
+                    <TableCell className="font-mono text-xs">{student.nim}</TableCell>
                     <TableCell>{student.name}</TableCell>
                     <TableCell className="text-right">
                       <div className="flex justify-end gap-2">
@@ -162,7 +180,7 @@ export default function StudentsPage() {
                 ))
               ) : (
                 <TableRow>
-                  <TableCell colSpan={3} className="h-24 text-center text-muted-foreground">
+                  <TableCell colSpan={4} className="h-24 text-center text-muted-foreground">
                     {search ? "Mahasiswa tidak ditemukan." : "Belum ada mahasiswa terdaftar."}
                   </TableCell>
                 </TableRow>
@@ -176,14 +194,23 @@ export default function StudentsPage() {
       <Dialog open={!!editingStudent} onOpenChange={(open) => !open && setEditingStudent(null)}>
         <DialogContent>
           <DialogHeader>
-            <DialogTitle>Edit Nama Mahasiswa</DialogTitle>
+            <DialogTitle>Edit Data Mahasiswa</DialogTitle>
           </DialogHeader>
-          <div className="py-4">
-            <Input
-              value={editingStudent?.name || ""}
-              onChange={(e) => setEditingStudent(prev => prev ? { ...prev, name: e.target.value } : null)}
-              onKeyDown={(e) => e.key === "Enter" && handleUpdateStudent()}
-            />
+          <div className="space-y-4 py-4">
+            <div className="space-y-2">
+              <label className="text-sm font-medium">NIM</label>
+              <Input
+                value={editingStudent?.nim || ""}
+                onChange={(e) => setEditingStudent(prev => prev ? { ...prev, nim: e.target.value } : null)}
+              />
+            </div>
+            <div className="space-y-2">
+              <label className="text-sm font-medium">Nama Lengkap</label>
+              <Input
+                value={editingStudent?.name || ""}
+                onChange={(e) => setEditingStudent(prev => prev ? { ...prev, name: e.target.value } : null)}
+              />
+            </div>
           </div>
           <DialogFooter>
             <Button variant="outline" onClick={() => setEditingStudent(null)}>Batal</Button>

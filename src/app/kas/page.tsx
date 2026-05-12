@@ -57,7 +57,8 @@ export default function KasPage() {
   };
 
   const filteredStudents = data.students.filter(s => 
-    s.name.toLowerCase().includes(search.toLowerCase())
+    s.name.toLowerCase().includes(search.toLowerCase()) || 
+    s.nim.toLowerCase().includes(search.toLowerCase())
   );
 
   return (
@@ -95,7 +96,7 @@ export default function KasPage() {
           </CardHeader>
           <CardContent className="space-y-4">
             <div className="space-y-2">
-              <label className="text-xs font-semibold uppercase tracking-wider text-muted-foreground">Cari Nama</label>
+              <label className="text-xs font-semibold uppercase tracking-wider text-muted-foreground">Cari Nama/NIM</label>
               <div className="relative">
                 <Search className="absolute left-2.5 top-2.5 h-4 w-4 text-muted-foreground" />
                 <Input
@@ -131,7 +132,7 @@ export default function KasPage() {
               <TableHeader>
                 <TableRow>
                   <TableHead className="w-[80px]">No.</TableHead>
-                  <TableHead>Nama Mahasiswa</TableHead>
+                  <TableHead>Mahasiswa</TableHead>
                   <TableHead className="text-center">Status Bayar</TableHead>
                 </TableRow>
               </TableHeader>
@@ -144,7 +145,10 @@ export default function KasPage() {
                     return (
                       <TableRow key={student.id}>
                         <TableCell className="font-medium">{index + 1}</TableCell>
-                        <TableCell className="font-medium text-primary">{student.name}</TableCell>
+                        <TableCell>
+                          <div className="font-medium text-primary">{student.name}</div>
+                          <div className="text-[10px] text-muted-foreground font-mono">{student.nim}</div>
+                        </TableCell>
                         <TableCell className="text-center">
                           <Button
                             variant={isPaid ? "default" : "outline"}
