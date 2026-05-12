@@ -7,8 +7,18 @@ import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from "@/components/ui/table";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
-import { Plus, Search, Trash2, Edit2, UserPlus, X } from "lucide-react";
+import { Search, Trash2, Edit2, UserPlus } from "lucide-react";
 import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogFooter, DialogTrigger } from "@/components/ui/dialog";
+import { 
+  AlertDialog, 
+  AlertDialogAction, 
+  AlertDialogCancel, 
+  AlertDialogContent, 
+  AlertDialogDescription, 
+  AlertDialogFooter, 
+  AlertDialogHeader, 
+  AlertDialogTitle 
+} from "@/components/ui/alert-dialog";
 import { toast } from "@/hooks/use-toast";
 
 export default function StudentsPage() {
@@ -22,6 +32,7 @@ export default function StudentsPage() {
   const [search, setSearch] = useState("");
   const [newStudentName, setNewStudentName] = useState("");
   const [editingStudent, setEditingStudent] = useState<Student | null>(null);
+  const [studentToDelete, setStudentToDelete] = useState<Student | null>(null);
   const [isAddOpen, setIsAddOpen] = useState(false);
 
   if (!isHydrated) return null;
@@ -42,16 +53,17 @@ export default function StudentsPage() {
     toast({ title: "Berhasil", description: `Mahasiswa ${newStudent.name} ditambahkan.` });
   };
 
-  const handleDeleteStudent = (id: string) => {
-    const student = data.students.find(s => s.id === id);
-    if (confirm(`Hapus ${student?.name} dari daftar? Data pembayaran juga akan terhapus.`)) {
-      setData({
-        ...data,
-        students: data.students.filter((s) => s.id !== id),
-        payments: data.payments.filter((p) => p.studentId !== id),
-      });
-      toast({ variant: "destructive", title: "Terhapus", description: "Data mahasiswa telah dihapus." });
-    }
+  const confirmDelete = () => {
+    if (!studentToDelete) return;
+    
+    setData({
+      ...data,
+      students: data.students.filter((s) => s.id !== studentToDelete.id),
+      payments: data.payments.filter((p) => p.studentId !== studentToDelete.id),
+    });
+    
+    setStudentToDelete(null);
+    toast({ variant: "destructive", title: "Terhapus", description: "Data mahasiswa telah dihapus." });
   };
 
   const handleUpdateStudent = () => {
@@ -140,7 +152,7 @@ export default function StudentsPage() {
                         <Button
                           variant="ghost"
                           size="icon"
-                          onClick={() => handleDeleteStudent(student.id)}
+                          onClick={() => setStudentToDelete(student)}
                         >
                           <Trash2 className="h-4 w-4 text-destructive" />
                         </Button>
@@ -179,6 +191,24 @@ export default function StudentsPage() {
           </DialogFooter>
         </DialogContent>
       </Dialog>
+
+      {/* Delete Confirmation Alert */}
+      <AlertDialog open={!!studentToDelete} onOpenChange={(open) => !open && setStudentToDelete(null)}>
+        <AlertDialogContent>
+          <AlertDialogHeader>
+            <AlertDialogTitle>Hapus Mahasiswa?</AlertDialogTitle>
+            <AlertDialogDescription>
+              Tindakan ini tidak dapat dibatalkan. Menghapus <strong>{studentToDelete?.name}</strong> juga akan menghapus seluruh riwayat pembayaran terkait dari ledger.
+            </AlertDialogDescription>
+          </AlertDialogHeader>
+          <AlertDialogFooter>
+            <AlertDialogCancel>Batal</AlertDialogCancel>
+            <AlertDialogAction onClick={confirmDelete} className="bg-destructive text-destructive-foreground hover:bg-destructive/90">
+              Hapus Data
+            </AlertDialogAction>
+          </AlertDialogFooter>
+        </AlertDialogContent>
+      </AlertDialog>
     </div>
   );
 }
