@@ -11,6 +11,7 @@ import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@
 import { toast } from "@/hooks/use-toast";
 import { Wallet, Search, Filter } from "lucide-react";
 import { Input } from "@/components/ui/input";
+import { cn } from "@/lib/utils";
 
 export default function KasPage() {
   const [data, setData, isHydrated] = useLocalStorage<AppData>("kasmahasiswa_data", {

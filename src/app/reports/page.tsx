@@ -5,9 +5,10 @@ import { useLocalStorage } from "@/hooks/use-local-storage";
 import { AppData } from "@/lib/types";
 import { Button } from "@/components/ui/button";
 import { Card, CardContent, CardHeader, CardTitle, CardDescription } from "@/components/ui/card";
-import { Download, Sparkles, Loader2, TrendingUp, Info } from "lucide-react";
+import { Download, Sparkles, Loader2, TrendingUp, Info, Activity } from "lucide-react";
 import { analyzeFinancialTrendsAndSuggestBudget, AnalyzeFinancialTrendsOutput } from "@/ai/flows/analyze-financial-trends-and-suggest-budget";
 import { toast } from "@/hooks/use-toast";
+import { cn } from "@/lib/utils";
 
 export default function ReportsPage() {
   const [data, , isHydrated] = useLocalStorage<AppData>("kasmahasiswa_data", {
