@@ -17,7 +17,7 @@ const TransactionSchema = z.object({
   description: z.string().describe('A brief description of the transaction.'),
 });
 
-export const AnalyzeFinancialTrendsInputSchema = z.object({
+const AnalyzeFinancialTrendsInputSchema = z.object({
   transactions: z.array(TransactionSchema).describe('An array of financial transactions including date, type, amount, and description.'),
 });
 export type AnalyzeFinancialTrendsInput = z.infer<typeof AnalyzeFinancialTrendsInputSchema>;
@@ -29,7 +29,7 @@ const MonthlySummaryEntrySchema = z.object({
   netBalance: z.number().describe('Net balance (income - expenses) for the month.'),
 });
 
-export const AnalyzeFinancialTrendsOutputSchema = z.object({
+const AnalyzeFinancialTrendsOutputSchema = z.object({
   monthlySummaries: z.array(MonthlySummaryEntrySchema).describe('A summary of financial activity for each month.'),
   trendsAnalysis: z.string().describe('A textual summary of key financial trends observed from the transactions.'),
   budgetSuggestions: z.string().describe('Recommendations for budget adjustments based on the analysis.'),
