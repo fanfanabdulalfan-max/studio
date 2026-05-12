@@ -1,3 +1,4 @@
+
 "use client";
 
 import { useState } from "react";
@@ -5,10 +6,12 @@ import { useLocalStorage } from "@/hooks/use-local-storage";
 import { AppData } from "@/lib/types";
 import { Button } from "@/components/ui/button";
 import { Card, CardContent, CardHeader, CardTitle, CardDescription } from "@/components/ui/card";
-import { Download, Sparkles, Loader2, TrendingUp, Info, Activity } from "lucide-react";
+import { Download, Sparkles, Loader2, TrendingUp, Info, Activity, FileText } from "lucide-react";
 import { analyzeFinancialTrendsAndSuggestBudget, AnalyzeFinancialTrendsOutput } from "@/ai/flows/analyze-financial-trends-and-suggest-budget";
 import { toast } from "@/hooks/use-toast";
 import { cn } from "@/lib/utils";
+import jsPDF from "jspdf";
+import autoTable from "jspdf-autotable";
 
 export default function ReportsPage() {
   const [data, , isHydrated] = useLocalStorage<AppData>("kasmahasiswa_data", {
@@ -22,6 +25,132 @@ export default function ReportsPage() {
   const [isLoadingAi, setIsLoadingAi] = useState(false);
 
   if (!isHydrated) return null;
+
+  const totalIncome = data.payments.reduce((sum, p) => sum + p.amount, 0);
+  const totalExpenses = data.expenses.reduce((sum, e) => sum + e.amount, 0);
+  const currentBalance = totalIncome - totalExpenses;
+
+  const downloadPDF = () => {
+    if (data.students.length === 0 && data.expenses.length === 0) {
+      toast({ variant: "destructive", title: "Data Kosong", description: "Tidak ada data untuk diekspor." });
+      return;
+    }
+
+    const doc = new jsPDF();
+    const dateStr = new Date().toLocaleDateString('id-ID', { 
+      day: 'numeric', 
+      month: 'long', 
+      year: 'numeric' 
+    });
+
+    // Header
+    doc.setFontSize(22);
+    doc.setTextColor(30, 58, 138); // Primary color
+    doc.text("LAPORAN KAS KELAS", 105, 20, { align: "center" });
+    
+    doc.setFontSize(10);
+    doc.setTextColor(100);
+    doc.text(`Dicetak pada: ${dateStr}`, 105, 28, { align: "center" });
+
+    // Summary Section
+    doc.setDrawColor(200);
+    doc.line(14, 35, 196, 35);
+
+    doc.setFontSize(12);
+    doc.setTextColor(0);
+    doc.text("Ringkasan Keuangan", 14, 45);
+
+    autoTable(doc, {
+      startY: 48,
+      head: [['Kategori', 'Jumlah']],
+      body: [
+        ['Total Pemasukan', `Rp ${totalIncome.toLocaleString()}`],
+        ['Total Pengeluaran', `Rp ${totalExpenses.toLocaleString()}`],
+        ['Saldo Akhir', `Rp ${currentBalance.toLocaleString()}`],
+      ],
+      theme: 'grid',
+      headStyles: { fillStyle: 'fill', fillColor: [30, 58, 138], textColor: [255, 255, 255] },
+      columnStyles: {
+        1: { halign: 'right', fontStyle: 'bold' }
+      }
+    });
+
+    // Payments Table
+    if (data.students.length > 0) {
+      doc.text("Rekapitulasi Pembayaran Mahasiswa", 14, (doc as any).lastAutoTable.finalY + 15);
+      
+      const weeks = Array.from({ length: 16 }, (_, i) => i + 1);
+      const headers = ["No", "NIM", "Nama", ...weeks.map(w => `M${w}`), "Total"];
+      
+      const body = data.students.map((student, idx) => {
+        const studentPayments = weeks.map(w => {
+          const p = data.payments.find(p => p.studentId === student.id && p.weekNumber === w);
+          return p ? "V" : "-";
+        });
+        const total = data.payments
+          .filter(p => p.studentId === student.id)
+          .reduce((sum, p) => sum + p.amount, 0);
+        
+        return [idx + 1, student.nim, student.name, ...studentPayments, `Rp ${total.toLocaleString()}`];
+      });
+
+      autoTable(doc, {
+        startY: (doc as any).lastAutoTable.finalY + 18,
+        head: [headers],
+        body: body,
+        theme: 'striped',
+        headStyles: { fillColor: [13, 148, 136], fontSize: 7 }, // Accent color
+        styles: { fontSize: 6 },
+        columnStyles: {
+          2: { cellWidth: 30 },
+          [headers.length - 1]: { fontStyle: 'bold', halign: 'right' }
+        }
+      });
+    }
+
+    // Expenses Table
+    if (data.expenses.length > 0) {
+      doc.addPage();
+      doc.setFontSize(12);
+      doc.text("Rincian Pengeluaran Kas", 14, 20);
+
+      const expenseBody = data.expenses.map((expense, idx) => [
+        idx + 1,
+        new Date(expense.date).toLocaleDateString('id-ID'),
+        expense.description,
+        `Rp ${expense.amount.toLocaleString()}`
+      ]);
+
+      autoTable(doc, {
+        startY: 25,
+        head: [['No', 'Tanggal', 'Keterangan', 'Nominal']],
+        body: expenseBody,
+        theme: 'grid',
+        headStyles: { fillColor: [239, 68, 68] }, // Destructive color
+        columnStyles: {
+          3: { halign: 'right', fontStyle: 'bold' }
+        }
+      });
+    }
+
+    // Footer
+    const pageCount = (doc as any).internal.getNumberOfPages();
+    for (let i = 1; i <= pageCount; i++) {
+      doc.setPage(i);
+      doc.setFontSize(8);
+      doc.setTextColor(150);
+      doc.text(
+        "KasMahasiswa Pro - Laporan Transparan & Digital",
+        105,
+        285,
+        { align: "center" }
+      );
+      doc.text(`Halaman ${i} dari ${pageCount}`, 196, 285, { align: "right" });
+    }
+
+    doc.save(`Laporan_Kas_${new Date().toISOString().split('T')[0]}.pdf`);
+    toast({ title: "Berhasil", description: "Laporan PDF telah berhasil dibuat." });
+  };
 
   const downloadCSV = () => {
     if (data.students.length === 0 && data.expenses.length === 0) {
@@ -73,7 +202,7 @@ export default function ReportsPage() {
     link.click();
     document.body.removeChild(link);
     
-    toast({ title: "Berhasil", description: "Laporan lengkap (Pembayaran & Pengeluaran) telah diunduh." });
+    toast({ title: "Berhasil", description: "Laporan lengkap (CSV) telah diunduh." });
   };
 
   const handleAiAnalysis = async () => {
@@ -117,19 +246,35 @@ export default function ReportsPage() {
         <p className="text-muted-foreground">Ekspor data transparan dan dapatkan wawasan cerdas dari AI Treasury.</p>
       </div>
 
-      <div className="grid gap-6 md:grid-cols-2">
+      <div className="grid gap-6 md:grid-cols-3">
         <Card className="shadow-sm border-t-4 border-t-primary">
           <CardHeader>
             <CardTitle className="flex items-center gap-2">
-              <Download className="h-5 w-5 text-primary" />
-              Ekspor Rekapitulasi
+              <FileText className="h-5 w-5 text-primary" />
+              Ekspor Laporan PDF
             </CardTitle>
-            <CardDescription>Unduh data pembayaran mahasiswa dan pengeluaran kas dalam satu file CSV.</CardDescription>
+            <CardDescription>Download rekap berwarna yang mudah dibaca untuk dibagikan ke grup kelas.</CardDescription>
           </CardHeader>
           <CardContent className="flex justify-center py-6">
-            <Button size="lg" className="w-full max-w-xs" onClick={downloadCSV}>
+            <Button size="lg" className="w-full" onClick={downloadPDF}>
+              <FileText className="mr-2 h-4 w-4" />
+              Download Laporan PDF
+            </Button>
+          </CardContent>
+        </Card>
+
+        <Card className="shadow-sm border-t-4 border-t-slate-400">
+          <CardHeader>
+            <CardTitle className="flex items-center gap-2">
+              <Download className="h-5 w-5 text-slate-600" />
+              Ekspor Format CSV
+            </CardTitle>
+            <CardDescription>Unduh data mentah dalam format CSV untuk diolah kembali di Excel.</CardDescription>
+          </CardHeader>
+          <CardContent className="flex justify-center py-6">
+            <Button variant="outline" size="lg" className="w-full" onClick={downloadCSV}>
               <Download className="mr-2 h-4 w-4" />
-              Download Laporan Lengkap
+              Download Laporan CSV
             </Button>
           </CardContent>
         </Card>
@@ -140,12 +285,12 @@ export default function ReportsPage() {
               <Sparkles className="h-5 w-5 text-accent" />
               AI Treasury Assistant
             </CardTitle>
-            <CardDescription>Gunakan kecerdasan buatan untuk menganalisis tren dan saran anggaran masa depan.</CardDescription>
+            <CardDescription>Gunakan kecerdasan buatan untuk menganalisis tren dan saran anggaran.</CardDescription>
           </CardHeader>
           <CardContent className="flex justify-center py-6">
             <Button 
               size="lg" 
-              className="w-full max-w-xs bg-accent hover:bg-accent/90" 
+              className="w-full bg-accent hover:bg-accent/90" 
               onClick={handleAiAnalysis}
               disabled={isLoadingAi}
             >
