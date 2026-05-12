@@ -1,3 +1,4 @@
+
 'use server';
 /**
  * @fileOverview An AI Treasury Assistant flow for analyzing financial trends and suggesting budget adjustments.
@@ -36,10 +37,6 @@ const AnalyzeFinancialTrendsOutputSchema = z.object({
 });
 export type AnalyzeFinancialTrendsOutput = z.infer<typeof AnalyzeFinancialTrendsOutputSchema>;
 
-export async function analyzeFinancialTrendsAndSuggestBudget(input: AnalyzeFinancialTrendsInput): Promise<AnalyzeFinancialTrendsOutput> {
-  return analyzeFinancialTrendsFlow(input);
-}
-
 const analyzeFinancialTrendsPrompt = ai.definePrompt({
   name: 'analyzeFinancialTrendsPrompt',
   input: { schema: AnalyzeFinancialTrendsInputSchema },
@@ -71,3 +68,10 @@ const analyzeFinancialTrendsFlow = ai.defineFlow(
     return output!;
   }
 );
+
+/**
+ * Server Action wrapper for the financial trends analysis flow.
+ */
+export async function analyzeFinancialTrendsAndSuggestBudget(input: AnalyzeFinancialTrendsInput): Promise<AnalyzeFinancialTrendsOutput> {
+  return analyzeFinancialTrendsFlow(input);
+}
