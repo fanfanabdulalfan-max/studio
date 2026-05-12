@@ -2,13 +2,13 @@
 
 import Link from "next/link";
 import { usePathname } from "next/navigation";
-import { LayoutDashboard, Users, Wallet, CreditCard, FileBarChart, Menu, Download, Upload, FileJson } from "lucide-react";
+import { LayoutDashboard, Users, Wallet, CreditCard, FileBarChart, Menu, Download, Upload } from "lucide-react";
 import { cn } from "@/lib/utils";
 import { Button } from "@/components/ui/button";
 import { useState, useRef } from "react";
 import { Sheet, SheetContent, SheetTrigger, SheetHeader, SheetTitle, SheetDescription } from "@/components/ui/sheet";
 import { toast } from "@/hooks/use-toast";
-import { Separator } from "@/components/ui/separator";
+import { ScrollArea } from "@/components/ui/scroll-area";
 
 const navItems = [
   { href: "/", label: "Dashboard", icon: LayoutDashboard },
@@ -154,7 +154,7 @@ export function AppNavbar() {
                 <SheetDescription>Menu navigasi untuk aplikasi KasMahasiswa Pro</SheetDescription>
               </SheetHeader>
               
-              <div className="p-6 border-b border-white/10">
+              <div className="p-6 border-b border-white/10 shrink-0">
                 <div className="flex items-center gap-2 mb-1">
                   <div className="rounded-lg bg-accent p-1">
                     <Wallet className="h-5 w-5 text-white" />
@@ -164,52 +164,54 @@ export function AppNavbar() {
                 <p className="text-[10px] text-primary-foreground/60 uppercase tracking-widest font-medium">Bendahara Digital v1.0</p>
               </div>
 
-              <nav className="flex-1 p-4 space-y-1">
-                {navItems.map((item) => (
-                  <Link
-                    key={item.href}
-                    href={item.href}
-                    onClick={() => setIsOpen(false)}
-                    className={cn(
-                      "flex items-center gap-3 px-4 py-3 text-base font-medium rounded-lg transition-colors hover:bg-white/10",
-                      pathname === item.href ? "bg-white/10 text-accent shadow-inner" : "text-primary-foreground/80"
-                    )}
-                  >
-                    <item.icon className="h-5 w-5" />
-                    {item.label}
-                  </Link>
-                ))}
-                
-                <div className="pt-6 pb-2 px-4">
-                  <p className="text-[10px] text-primary-foreground/40 uppercase tracking-widest font-bold mb-4">Manajemen Data</p>
-                  <div className="grid grid-cols-2 gap-2">
-                    <Button 
-                      variant="outline" 
-                      className="bg-white/5 border-white/10 hover:bg-white/10 hover:text-accent flex flex-col h-20 gap-2 items-center justify-center"
-                      onClick={() => {
-                        handleExportData();
-                        setIsOpen(false);
-                      }}
+              <ScrollArea className="flex-1">
+                <nav className="p-4 space-y-1">
+                  {navItems.map((item) => (
+                    <Link
+                      key={item.href}
+                      href={item.href}
+                      onClick={() => setIsOpen(false)}
+                      className={cn(
+                        "flex items-center gap-3 px-4 py-3 text-base font-medium rounded-lg transition-colors hover:bg-white/10",
+                        pathname === item.href ? "bg-white/10 text-accent shadow-inner" : "text-primary-foreground/80"
+                      )}
                     >
-                      <Download className="h-5 w-5" />
-                      <span className="text-xs">Export JSON</span>
-                    </Button>
-                    <Button 
-                      variant="outline" 
-                      className="bg-white/5 border-white/10 hover:bg-white/10 hover:text-accent flex flex-col h-20 gap-2 items-center justify-center"
-                      onClick={() => {
-                        handleImportClick();
-                        setIsOpen(false);
-                      }}
-                    >
-                      <Upload className="h-5 w-5" />
-                      <span className="text-xs">Import JSON</span>
-                    </Button>
+                      <item.icon className="h-5 w-5" />
+                      {item.label}
+                    </Link>
+                  ))}
+                  
+                  <div className="pt-6 pb-2 px-4">
+                    <p className="text-[10px] text-primary-foreground/40 uppercase tracking-widest font-bold mb-4">Manajemen Data</p>
+                    <div className="grid grid-cols-2 gap-2">
+                      <Button 
+                        variant="outline" 
+                        className="bg-white/5 border-white/10 hover:bg-white/10 hover:text-accent flex flex-col h-20 gap-2 items-center justify-center"
+                        onClick={() => {
+                          handleExportData();
+                          setIsOpen(false);
+                        }}
+                      >
+                        <Download className="h-5 w-5" />
+                        <span className="text-xs">Export JSON</span>
+                      </Button>
+                      <Button 
+                        variant="outline" 
+                        className="bg-white/5 border-white/10 hover:bg-white/10 hover:text-accent flex flex-col h-20 gap-2 items-center justify-center"
+                        onClick={() => {
+                          handleImportClick();
+                          setIsOpen(false);
+                        }}
+                      >
+                        <Upload className="h-5 w-5" />
+                        <span className="text-xs">Import JSON</span>
+                      </Button>
+                    </div>
                   </div>
-                </div>
-              </nav>
+                </nav>
+              </ScrollArea>
 
-              <div className="p-6 border-t border-white/10 bg-black/10">
+              <div className="p-6 border-t border-white/10 bg-black/10 shrink-0">
                 <p className="text-[10px] text-center text-primary-foreground/40 leading-relaxed">
                   Gunakan fitur Export secara rutin untuk mencadangkan data kas Anda ke perangkat lokal.
                 </p>
