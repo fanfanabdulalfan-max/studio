@@ -1,0 +1,70 @@
+{
+  "entities": {
+    "Student": {
+      "title": "Student",
+      "description": "Information about a student in the class",
+      "type": "object",
+      "properties": {
+        "id": { "type": "string" },
+        "name": { "type": "string" },
+        "nim": { "type": "string" }
+      },
+      "required": ["id", "name", "nim"]
+    },
+    "Payment": {
+      "title": "Payment",
+      "description": "Weekly payment record for a student",
+      "type": "object",
+      "properties": {
+        "id": { "type": "string" },
+        "studentId": { "type": "string" },
+        "weekNumber": { "type": "number" },
+        "amount": { "type": "number" },
+        "date": { "type": "string", "format": "date-time" },
+        "status": { "type": "string", "enum": ["paid", "unpaid"] }
+      },
+      "required": ["id", "studentId", "weekNumber", "amount", "date", "status"]
+    },
+    "Expense": {
+      "title": "Expense",
+      "description": "Expense record for class activities",
+      "type": "object",
+      "properties": {
+        "id": { "type": "string" },
+        "amount": { "type": "number" },
+        "description": { "type": "string" },
+        "date": { "type": "string", "format": "date-time" }
+      },
+      "required": ["id", "amount", "description", "date"]
+    },
+    "Settings": {
+      "title": "Settings",
+      "description": "General settings for the treasurer's class",
+      "type": "object",
+      "properties": {
+        "weeklyFee": { "type": "number" }
+      }
+    }
+  },
+  "auth": {
+    "providers": ["google.com", "password"]
+  },
+  "firestore": {
+    "/users/{userId}/students/{studentId}": {
+      "schema": { "$ref": "#/entities/Student" },
+      "description": "Collection of students managed by a treasurer"
+    },
+    "/users/{userId}/payments/{paymentId}": {
+      "schema": { "$ref": "#/entities/Payment" },
+      "description": "Collection of payments received by a treasurer"
+    },
+    "/users/{userId}/expenses/{expenseId}": {
+      "schema": { "$ref": "#/entities/Expense" },
+      "description": "Collection of expenses recorded by a treasurer"
+    },
+    "/users/{userId}/config/settings": {
+      "schema": { "$ref": "#/entities/Settings" },
+      "description": "Treasurer-specific configuration"
+    }
+  }
+}
