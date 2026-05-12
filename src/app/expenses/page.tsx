@@ -9,7 +9,7 @@ import { Textarea } from "@/components/ui/textarea";
 import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from "@/components/ui/table";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { toast } from "@/hooks/use-toast";
-import { Receipt, Plus, Trash2, CalendarIcon } from "lucide-react";
+import { Receipt, Plus, CalendarIcon } from "lucide-react";
 
 export default function ExpensesPage() {
   const [data, setData, isHydrated] = useLocalStorage<AppData>("kasmahasiswa_data", {
@@ -44,16 +44,6 @@ export default function ExpensesPage() {
     setDesc("");
     setAmount("");
     toast({ title: "Tercatat", description: "Pengeluaran kelas berhasil ditambahkan." });
-  };
-
-  const handleDeleteExpense = (id: string) => {
-    if (confirm("Hapus catatan pengeluaran ini?")) {
-      setData({
-        ...data,
-        expenses: data.expenses.filter((e) => e.id !== id),
-      });
-      toast({ variant: "destructive", title: "Terhapus", description: "Catatan pengeluaran telah dihapus." });
-    }
   };
 
   return (
@@ -127,7 +117,6 @@ export default function ExpensesPage() {
                     <TableHead>Tanggal</TableHead>
                     <TableHead>Keterangan</TableHead>
                     <TableHead className="text-right">Nominal</TableHead>
-                    <TableHead className="text-right">Aksi</TableHead>
                   </TableRow>
                 </TableHeader>
                 <TableBody>
@@ -141,20 +130,11 @@ export default function ExpensesPage() {
                         <TableCell className="text-right font-bold text-destructive">
                           - Rp {expense.amount.toLocaleString()}
                         </TableCell>
-                        <TableCell className="text-right">
-                          <Button
-                            variant="ghost"
-                            size="icon"
-                            onClick={() => handleDeleteExpense(expense.id)}
-                          >
-                            <Trash2 className="h-4 w-4 text-destructive" />
-                          </Button>
-                        </TableCell>
                       </TableRow>
                     ))
                   ) : (
                     <TableRow>
-                      <TableCell colSpan={4} className="h-32 text-center text-muted-foreground">
+                      <TableCell colSpan={3} className="h-32 text-center text-muted-foreground">
                         Belum ada catatan pengeluaran.
                       </TableCell>
                     </TableRow>
