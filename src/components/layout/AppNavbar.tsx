@@ -6,7 +6,7 @@ import { LayoutDashboard, Users, Wallet, CreditCard, FileBarChart, Menu } from "
 import { cn } from "@/lib/utils";
 import { Button } from "@/components/ui/button";
 import { useState } from "react";
-import { Sheet, SheetContent, SheetTrigger } from "@/components/ui/sheet";
+import { Sheet, SheetContent, SheetTrigger, SheetHeader, SheetTitle, SheetDescription } from "@/components/ui/sheet";
 
 const navItems = [
   { href: "/", label: "Dashboard", icon: LayoutDashboard },
@@ -56,6 +56,10 @@ export function AppNavbar() {
               </Button>
             </SheetTrigger>
             <SheetContent side="left" className="w-[280px] bg-primary text-primary-foreground border-none p-0">
+              <SheetHeader className="sr-only">
+                <SheetTitle>Navigasi Mobile</SheetTitle>
+                <SheetDescription>Menu navigasi untuk aplikasi KasMahasiswa Pro</SheetDescription>
+              </SheetHeader>
               <div className="flex flex-col h-full">
                 <div className="p-6 border-b border-white/10">
                   <span className="text-xl font-bold font-headline">KasMahasiswa <span className="text-accent">Pro</span></span>
