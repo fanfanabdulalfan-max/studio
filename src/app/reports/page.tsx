@@ -24,36 +24,56 @@ export default function ReportsPage() {
   if (!isHydrated) return null;
 
   const downloadCSV = () => {
-    if (data.students.length === 0) {
-      toast({ variant: "destructive", title: "Error", description: "Tidak ada data mahasiswa untuk diekspor." });
+    if (data.students.length === 0 && data.expenses.length === 0) {
+      toast({ variant: "destructive", title: "Data Kosong", description: "Tidak ada data untuk diekspor." });
       return;
     }
 
-    // Prepare CSV header
-    const weeks = Array.from({ length: 16 }, (_, i) => i + 1);
-    const headers = ["ID", "Nama", ...weeks.map(w => `Mgg ${w}`), "Total Bayar"];
-    
-    // Create rows
-    const rows = data.students.map(student => {
-      const studentPayments = weeks.map(w => {
-        const p = data.payments.find(p => p.studentId === student.id && p.weekNumber === w);
-        return p ? p.amount : 0;
-      });
-      const total = studentPayments.reduce((a, b) => a + b, 0);
-      return [student.id, student.name, ...studentPayments, total];
-    });
+    let csvRows: string[] = [];
 
-    const csvContent = [headers, ...rows].map(e => e.join(",")).join("\n");
-    const blob = new Blob([csvContent], { type: "text/csv;charset=utf-8;" });
+    // Bagian 1: Rekapitulasi Pembayaran Mahasiswa
+    if (data.students.length > 0) {
+      csvRows.push("REKAPITULASI PEMBAYARAN KAS MAHASISWA");
+      const weeks = Array.from({ length: 16 }, (_, i) => i + 1);
+      const headers = ["ID", "Nama", ...weeks.map(w => `Mgg ${w}`), "Total Bayar"];
+      csvRows.push(headers.join(","));
+      
+      data.students.forEach(student => {
+        const studentPayments = weeks.map(w => {
+          const p = data.payments.find(p => p.studentId === student.id && p.weekNumber === w);
+          return p ? p.amount : 0;
+        });
+        const total = studentPayments.reduce((a, b) => a + b, 0);
+        csvRows.push([student.id, `"${student.name}"`, ...studentPayments, total].join(","));
+      });
+      csvRows.push(""); // Baris kosong sebagai pemisah
+      csvRows.push(""); // Baris kosong sebagai pemisah
+    }
+
+    // Bagian 2: Laporan Pengeluaran
+    if (data.expenses.length > 0) {
+      csvRows.push("LAPORAN PENGELUARAN KAS");
+      csvRows.push("Tanggal,Keterangan,Nominal");
+      data.expenses.forEach(expense => {
+        csvRows.push([
+          new Date(expense.date).toLocaleDateString('id-ID'),
+          `"${expense.description.replace(/"/g, '""')}"`,
+          expense.amount
+        ].join(","));
+      });
+    }
+
+    const csvString = csvRows.join("\n");
+    const blob = new Blob([csvString], { type: "text/csv;charset=utf-8;" });
     const url = URL.createObjectURL(blob);
     const link = document.createElement("a");
     link.setAttribute("href", url);
-    link.setAttribute("download", `Rekap_Kas_${new Date().toISOString().split('T')[0]}.csv`);
+    link.setAttribute("download", `Laporan_Lengkap_Kas_${new Date().toISOString().split('T')[0]}.csv`);
     document.body.appendChild(link);
     link.click();
     document.body.removeChild(link);
     
-    toast({ title: "Berhasil", description: "Laporan CSV telah diunduh." });
+    toast({ title: "Berhasil", description: "Laporan lengkap (Pembayaran & Pengeluaran) telah diunduh." });
   };
 
   const handleAiAnalysis = async () => {
@@ -104,12 +124,12 @@ export default function ReportsPage() {
               <Download className="h-5 w-5 text-primary" />
               Ekspor Rekapitulasi
             </CardTitle>
-            <CardDescription>Unduh semua data pembayaran mahasiswa dalam format CSV (Excel) untuk arsip fisik.</CardDescription>
+            <CardDescription>Unduh data pembayaran mahasiswa dan pengeluaran kas dalam satu file CSV.</CardDescription>
           </CardHeader>
           <CardContent className="flex justify-center py-6">
             <Button size="lg" className="w-full max-w-xs" onClick={downloadCSV}>
               <Download className="mr-2 h-4 w-4" />
-              Download Laporan (CSV)
+              Download Laporan Lengkap
             </Button>
           </CardContent>
         </Card>
