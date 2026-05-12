@@ -161,7 +161,7 @@ export function AppNavbar() {
                   </div>
                   <span className="text-xl font-bold font-headline">KasMahasiswa <span className="text-accent">Pro</span></span>
                 </div>
-                <p className="text-[10px] text-primary-foreground/60 uppercase tracking-widest font-medium">Bendahara Digital v1.0</p>
+                <p className="text-[10px] text-primary-foreground/60 uppercase tracking-widest font-medium">BENDAHARA DIGITAL</p>
               </div>
 
               <ScrollArea className="flex-1">
