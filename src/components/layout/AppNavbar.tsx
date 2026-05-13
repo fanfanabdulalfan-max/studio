@@ -213,7 +213,7 @@ export function AppNavbar() {
 
               <div className="p-6 border-t border-white/10 bg-black/10 shrink-0">
                 <p className="text-[10px] text-center text-primary-foreground/40 leading-relaxed">
-                  Developer Abdul Muis Nur Alfan.
+                  DeveloperAbdul Muis Nur Alfan.
                 </p>
               </div>
             </SheetContent>
