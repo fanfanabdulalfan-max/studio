@@ -6,12 +6,14 @@ import { AppData, Payment } from "@/lib/types";
 import { Button } from "@/components/ui/button";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from "@/components/ui/table";
-import { Checkbox } from "@/components/ui/checkbox";
-import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
 import { toast } from "@/hooks/use-toast";
-import { Wallet, Search, Filter } from "lucide-react";
+import { Wallet, Search, Filter, CalendarIcon, ChevronLeft, ChevronRight } from "lucide-react";
 import { Input } from "@/components/ui/input";
 import { cn } from "@/lib/utils";
+import { Calendar } from "@/components/ui/calendar";
+import { Popover, PopoverContent, PopoverTrigger } from "@/components/ui/popover";
+import { format, addDays, startOfWeek } from "date-fns";
+import { id } from "date-fns/locale";
 
 export default function KasPage() {
   const [data, setData, isHydrated] = useLocalStorage<AppData>("kasmahasiswa_data", {
@@ -21,29 +23,32 @@ export default function KasPage() {
     weeklyFee: 5000,
   });
 
-  const [currentWeek, setCurrentWeek] = useState(1);
+  const [selectedDate, setSelectedDate] = useState<Date>(() => {
+    return startOfWeek(new Date(), { weekStartsOn: 0 });
+  });
+
   const [search, setSearch] = useState("");
 
   if (!isHydrated) return null;
 
+  const dateKey = format(selectedDate, "yyyy-MM-dd");
+
   const togglePayment = (studentId: string) => {
     const existingPayment = data.payments.find(
-      (p) => p.studentId === studentId && p.weekNumber === currentWeek
+      (p) => p.studentId === studentId && p.weekNumber === dateKey
     );
 
     if (existingPayment) {
-      // Remove payment (Unpaid)
       setData({
         ...data,
         payments: data.payments.filter((p) => p.id !== existingPayment.id),
       });
       toast({ title: "Status Diperbarui", description: "Status pembayaran diubah menjadi Belum Bayar." });
     } else {
-      // Add payment (Paid)
       const newPayment: Payment = {
         id: crypto.randomUUID(),
         studentId,
-        weekNumber: currentWeek,
+        weekNumber: dateKey,
         amount: data.weeklyFee,
         date: new Date().toISOString(),
         status: "paid",
@@ -61,28 +66,47 @@ export default function KasPage() {
     s.nim.toLowerCase().includes(search.toLowerCase())
   );
 
+  const shiftDate = (weeks: number) => {
+    setSelectedDate(prev => addDays(prev, weeks * 7));
+  };
+
   return (
     <div className="space-y-6 animate-in fade-in duration-500">
       <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-4">
         <div>
           <h1 className="text-3xl font-bold font-headline text-primary">Input Kas Mingguan</h1>
-          <p className="text-muted-foreground">Catat setoran mingguan mahasiswa dengan satu klik.</p>
+          <p className="text-muted-foreground">Catat setoran mingguan mahasiswa berdasarkan tanggal hari Minggu.</p>
         </div>
         
-        <div className="flex items-center gap-3">
-          <div className="text-sm font-medium">Minggu ke-</div>
-          <Select value={currentWeek.toString()} onValueChange={(v) => setCurrentWeek(parseInt(v))}>
-            <SelectTrigger className="w-[100px]">
-              <SelectValue placeholder="Pilih Minggu" />
-            </SelectTrigger>
-            <SelectContent>
-              {Array.from({ length: 16 }).map((_, i) => (
-                <SelectItem key={i + 1} value={(i + 1).toString()}>
-                  {i + 1}
-                </SelectItem>
-              ))}
-            </SelectContent>
-          </Select>
+        <div className="flex items-center gap-2">
+          <Button variant="outline" size="icon" onClick={() => shiftDate(-1)}>
+            <ChevronLeft className="h-4 w-4" />
+          </Button>
+          
+          <Popover>
+            <PopoverTrigger asChild>
+              <Button variant="outline" className={cn(
+                "w-[240px] justify-start text-left font-medium border-primary/20",
+                !selectedDate && "text-muted-foreground"
+              )}>
+                <CalendarIcon className="mr-2 h-4 w-4 text-accent" />
+                {format(selectedDate, "EEEE, d MMM yyyy", { locale: id })}
+              </Button>
+            </PopoverTrigger>
+            <PopoverContent className="w-auto p-0" align="end">
+              <Calendar
+                mode="single"
+                selected={selectedDate}
+                onSelect={(date) => date && setSelectedDate(date)}
+                disabled={(date) => date.getDay() !== 0}
+                initialFocus
+              />
+            </PopoverContent>
+          </Popover>
+
+          <Button variant="outline" size="icon" onClick={() => shiftDate(1)}>
+            <ChevronRight className="h-4 w-4" />
+          </Button>
         </div>
       </div>
 
@@ -122,7 +146,7 @@ export default function KasPage() {
 
         <Card className="md:col-span-3 shadow-sm">
           <CardHeader className="flex flex-row items-center justify-between pb-2 border-b">
-            <CardTitle className="text-lg">Daftar Mahasiswa - Minggu {currentWeek}</CardTitle>
+            <CardTitle className="text-lg">Daftar Mahasiswa - {format(selectedDate, "d MMMM yyyy", { locale: id })}</CardTitle>
             <div className="bg-accent/10 text-accent px-3 py-1 rounded-full text-xs font-bold">
               Rp {data.weeklyFee.toLocaleString()}/mgg
             </div>
@@ -140,7 +164,7 @@ export default function KasPage() {
                 {filteredStudents.length > 0 ? (
                   filteredStudents.map((student, index) => {
                     const isPaid = data.payments.some(
-                      (p) => p.studentId === student.id && p.weekNumber === currentWeek
+                      (p) => p.studentId === student.id && p.weekNumber === dateKey
                     );
                     return (
                       <TableRow key={student.id}>

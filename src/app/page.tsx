@@ -5,9 +5,10 @@ import { AppData } from "@/lib/types";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Wallet, ArrowDownCircle, ArrowUpCircle, Users, Activity } from "lucide-react";
 import { Skeleton } from "@/components/ui/skeleton";
-import { ChartContainer, ChartTooltip, ChartTooltipContent } from "@/components/ui/chart";
 import { Bar, BarChart, ResponsiveContainer, XAxis, YAxis, Tooltip, Legend } from "recharts";
 import { cn } from "@/lib/utils";
+import { format, parseISO, isValid } from "date-fns";
+import { id } from "date-fns/locale";
 
 export default function Dashboard() {
   const [data, , isHydrated] = useLocalStorage<AppData>("kasmahasiswa_data", {
@@ -32,17 +33,20 @@ export default function Dashboard() {
   const totalExpenses = data.expenses.reduce((sum, e) => sum + e.amount, 0);
   const currentBalance = totalIncome - totalExpenses;
 
-  // Prepare chart data (Monthly Summary)
   const monthlyData: Record<string, { month: string; income: number; expense: number }> = {};
   
   data.payments.forEach(p => {
-    const month = p.date.substring(0, 7);
+    const dateObj = parseISO(p.weekNumber);
+    if (!isValid(dateObj)) return;
+    const month = format(dateObj, "yyyy-MM");
     if (!monthlyData[month]) monthlyData[month] = { month, income: 0, expense: 0 };
     monthlyData[month].income += p.amount;
   });
 
   data.expenses.forEach(e => {
-    const month = e.date.substring(0, 7);
+    const dateObj = parseISO(e.date);
+    if (!isValid(dateObj)) return;
+    const month = format(dateObj, "yyyy-MM");
     if (!monthlyData[month]) monthlyData[month] = { month, income: 0, expense: 0 };
     monthlyData[month].expense += e.amount;
   });
@@ -114,7 +118,17 @@ export default function Dashboard() {
             {chartData.length > 0 ? (
               <ResponsiveContainer width="100%" height="100%">
                 <BarChart data={chartData}>
-                  <XAxis dataKey="month" stroke="#888888" fontSize={12} tickLine={false} axisLine={false} />
+                  <XAxis 
+                    dataKey="month" 
+                    stroke="#888888" 
+                    fontSize={12} 
+                    tickLine={false} 
+                    axisLine={false} 
+                    tickFormatter={(v) => {
+                      const date = parseISO(`${v}-01`);
+                      return isValid(date) ? format(date, "MMM yyyy", { locale: id }) : v;
+                    }}
+                  />
                   <YAxis stroke="#888888" fontSize={12} tickLine={false} axisLine={false} tickFormatter={(value) => `Rp ${value/1000}k`} />
                   <Tooltip 
                     contentStyle={{ borderRadius: '8px', border: 'none', boxShadow: '0 4px 12px rgba(0,0,0,0.1)' }}
@@ -142,6 +156,16 @@ export default function Dashboard() {
                 .slice(0, 6)
                 .map((item, idx) => {
                   const isExpense = 'description' in item;
+                  let description = "";
+                  if (isExpense) {
+                    description = item.description;
+                  } else {
+                    const student = data.students.find(s => s.id === item.studentId);
+                    const weekDate = parseISO(item.weekNumber);
+                    const formattedWeek = isValid(weekDate) ? format(weekDate, "dd/MM", { locale: id }) : "??";
+                    description = `Kas ${formattedWeek}: ${student?.name || 'Mahasiswa'}`;
+                  }
+
                   return (
                     <div key={idx} className="flex items-center gap-4">
                       <div className={cn(
@@ -151,9 +175,7 @@ export default function Dashboard() {
                         {isExpense ? <ArrowDownCircle className="h-5 w-5" /> : <ArrowUpCircle className="h-5 w-5" />}
                       </div>
                       <div className="flex-1 min-w-0">
-                        <p className="text-sm font-medium truncate">
-                          {isExpense ? item.description : `Bayar Kas: ${data.students.find(s => s.id === (item as any).studentId)?.name || 'Mahasiswa'}`}
-                        </p>
+                        <p className="text-sm font-medium truncate">{description}</p>
                         <p className="text-xs text-muted-foreground">{new Date(item.date).toLocaleDateString('id-ID')}</p>
                       </div>
                       <div className={cn("text-sm font-semibold whitespace-nowrap", isExpense ? "text-red-600" : "text-teal-600")}>

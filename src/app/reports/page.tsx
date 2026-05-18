@@ -1,4 +1,3 @@
-
 "use client";
 
 import { useState } from "react";
@@ -12,6 +11,8 @@ import { toast } from "@/hooks/use-toast";
 import { cn } from "@/lib/utils";
 import jsPDF from "jspdf";
 import autoTable from "jspdf-autotable";
+import { format, parseISO, isValid } from "date-fns";
+import { id } from "date-fns/locale";
 
 export default function ReportsPage() {
   const [data, , isHydrated] = useLocalStorage<AppData>("kasmahasiswa_data", {
@@ -30,6 +31,9 @@ export default function ReportsPage() {
   const totalExpenses = data.expenses.reduce((sum, e) => sum + e.amount, 0);
   const currentBalance = totalIncome - totalExpenses;
 
+  // Mendapatkan daftar tanggal Minggu unik yang terekam di data
+  const recordedSundays = Array.from(new Set(data.payments.map(p => p.weekNumber))).sort();
+
   const downloadPDF = () => {
     if (data.students.length === 0 && data.expenses.length === 0) {
       toast({ variant: "destructive", title: "Data Kosong", description: "Tidak ada data untuk diekspor." });
@@ -43,16 +47,14 @@ export default function ReportsPage() {
       year: 'numeric' 
     });
 
-    // Header
     doc.setFontSize(22);
-    doc.setTextColor(30, 58, 138); // Primary color
+    doc.setTextColor(30, 58, 138); 
     doc.text("LAPORAN KAS KELAS", 105, 20, { align: "center" });
     
     doc.setFontSize(10);
     doc.setTextColor(100);
     doc.text(`Dicetak pada: ${dateStr}`, 105, 28, { align: "center" });
 
-    // Summary Section
     doc.setDrawColor(200);
     doc.line(14, 35, 196, 35);
 
@@ -69,22 +71,22 @@ export default function ReportsPage() {
         ['Saldo Akhir', `Rp ${currentBalance.toLocaleString()}`],
       ],
       theme: 'grid',
-      headStyles: { fillStyle: 'fill', fillColor: [30, 58, 138], textColor: [255, 255, 255] },
-      columnStyles: {
-        1: { halign: 'right', fontStyle: 'bold' }
-      }
+      headStyles: { fillColor: [30, 58, 138], textColor: [255, 255, 255] },
+      columnStyles: { 1: { halign: 'right', fontStyle: 'bold' } }
     });
 
-    // Payments Table
     if (data.students.length > 0) {
       doc.text("Rekapitulasi Pembayaran Mahasiswa", 14, (doc as any).lastAutoTable.finalY + 15);
       
-      const weeks = Array.from({ length: 16 }, (_, i) => i + 1);
-      const headers = ["No", "NIM", "Nama", ...weeks.map(w => `M${w}`), "Total"];
+      const columns = recordedSundays.map(s => {
+        const d = parseISO(s);
+        return isValid(d) ? format(d, "dd/MM") : s;
+      });
+      const headers = ["No", "NIM", "Nama", ...columns, "Total"];
       
       const body = data.students.map((student, idx) => {
-        const studentPayments = weeks.map(w => {
-          const p = data.payments.find(p => p.studentId === student.id && p.weekNumber === w);
+        const studentPayments = recordedSundays.map(s => {
+          const p = data.payments.find(p => p.studentId === student.id && p.weekNumber === s);
           return p ? "V" : "-";
         });
         const total = data.payments
@@ -99,16 +101,15 @@ export default function ReportsPage() {
         head: [headers],
         body: body,
         theme: 'striped',
-        headStyles: { fillColor: [13, 148, 136], fontSize: 7 }, // Accent color
-        styles: { fontSize: 6 },
+        headStyles: { fillColor: [13, 148, 136], fontSize: 6 },
+        styles: { fontSize: 5 },
         columnStyles: {
-          2: { cellWidth: 30 },
+          2: { cellWidth: 20 },
           [headers.length - 1]: { fontStyle: 'bold', halign: 'right' }
         }
       });
     }
 
-    // Expenses Table
     if (data.expenses.length > 0) {
       doc.addPage();
       doc.setFontSize(12);
@@ -126,25 +127,17 @@ export default function ReportsPage() {
         head: [['No', 'Tanggal', 'Keterangan', 'Nominal']],
         body: expenseBody,
         theme: 'grid',
-        headStyles: { fillColor: [239, 68, 68] }, // Destructive color
-        columnStyles: {
-          3: { halign: 'right', fontStyle: 'bold' }
-        }
+        headStyles: { fillColor: [239, 68, 68] },
+        columnStyles: { 3: { halign: 'right', fontStyle: 'bold' } }
       });
     }
 
-    // Footer
     const pageCount = (doc as any).internal.getNumberOfPages();
     for (let i = 1; i <= pageCount; i++) {
       doc.setPage(i);
       doc.setFontSize(8);
       doc.setTextColor(150);
-      doc.text(
-        "KasMahasiswa Pro - Laporan Transparan & Digital",
-        105,
-        285,
-        { align: "center" }
-      );
+      doc.text("KasMahasiswa Pro - Laporan Transparan & Digital", 105, 285, { align: "center" });
       doc.text(`Halaman ${i} dari ${pageCount}`, 196, 285, { align: "right" });
     }
 
@@ -160,26 +153,22 @@ export default function ReportsPage() {
 
     let csvRows: string[] = [];
 
-    // Bagian 1: Rekapitulasi Pembayaran Mahasiswa
     if (data.students.length > 0) {
       csvRows.push("REKAPITULASI PEMBAYARAN KAS MAHASISWA");
-      const weeks = Array.from({ length: 16 }, (_, i) => i + 1);
-      const headers = ["NIM", "Nama", ...weeks.map(w => `Mgg ${w}`), "Total Bayar"];
+      const headers = ["NIM", "Nama", ...recordedSundays, "Total Bayar"];
       csvRows.push(headers.join(","));
       
       data.students.forEach(student => {
-        const studentPayments = weeks.map(w => {
-          const p = data.payments.find(p => p.studentId === student.id && p.weekNumber === w);
+        const studentPayments = recordedSundays.map(s => {
+          const p = data.payments.find(p => p.studentId === student.id && p.weekNumber === s);
           return p ? p.amount : 0;
         });
         const total = studentPayments.reduce((a, b) => a + b, 0);
         csvRows.push([`"${student.nim}"`, `"${student.name}"`, ...studentPayments, total].join(","));
       });
-      csvRows.push(""); 
-      csvRows.push(""); 
+      csvRows.push(""); csvRows.push(""); 
     }
 
-    // Bagian 2: Laporan Pengeluaran
     if (data.expenses.length > 0) {
       csvRows.push("LAPORAN PENGELUARAN KAS");
       csvRows.push("Tanggal,Keterangan,Nominal");
@@ -196,12 +185,11 @@ export default function ReportsPage() {
     const blob = new Blob([csvString], { type: "text/csv;charset=utf-8;" });
     const url = URL.createObjectURL(blob);
     const link = document.createElement("a");
-    link.setAttribute("href", url);
-    link.setAttribute("download", `Laporan_Lengkap_Kas_${new Date().toISOString().split('T')[0]}.csv`);
+    link.href = url;
+    link.download = `Laporan_Lengkap_Kas_${new Date().toISOString().split('T')[0]}.csv`;
     document.body.appendChild(link);
     link.click();
     document.body.removeChild(link);
-    
     toast({ title: "Berhasil", description: "Laporan lengkap (CSV) telah diunduh." });
   };
 
@@ -215,10 +203,10 @@ export default function ReportsPage() {
     try {
       const allTransactions = [
         ...data.payments.map(p => ({
-          date: p.date.split('T')[0],
+          date: p.weekNumber,
           type: 'income' as const,
           amount: p.amount,
-          description: `Setoran Kas Mgg ${p.weekNumber}`
+          description: `Kas Mingguan ${p.weekNumber}`
         })),
         ...data.expenses.map(e => ({
           date: e.date.split('T')[0],
@@ -232,7 +220,6 @@ export default function ReportsPage() {
       setAiReport(result);
       toast({ title: "Analisis Selesai", description: "AI telah selesai menganalisis keuangan kelas Anda." });
     } catch (error) {
-      console.error(error);
       toast({ variant: "destructive", title: "Kesalahan AI", description: "Gagal menghubungkan ke Asisten Keuangan." });
     } finally {
       setIsLoadingAi(false);

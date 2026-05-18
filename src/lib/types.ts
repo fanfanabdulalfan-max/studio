@@ -7,7 +7,7 @@ export interface Student {
 export interface Payment {
   id: string;
   studentId: string;
-  weekNumber: number;
+  weekNumber: string; // Sekarang menyimpan format YYYY-MM-DD
   amount: number;
   date: string;
   status: 'paid' | 'unpaid';
