@@ -1,4 +1,3 @@
-
 "use client";
 
 import { useState } from "react";
@@ -33,7 +32,12 @@ export default function ReportsPage() {
   const currentBalance = totalIncome - totalExpenses;
 
   // Mendapatkan daftar tanggal Minggu unik yang terekam di data, diurutkan kronologis
-  const recordedSundays = Array.from(new Set(data.payments.map(p => p.weekNumber))).sort();
+  // Pastikan hanya mengambil nilai string yang valid untuk diurutkan
+  const recordedSundays = Array.from(new Set(
+    data.payments
+      .map(p => p.weekNumber)
+      .filter(val => typeof val === 'string')
+  )).sort();
 
   const downloadPDF = () => {
     if (data.students.length === 0 && data.expenses.length === 0) {
@@ -51,7 +55,7 @@ export default function ReportsPage() {
     // Header Laporan
     doc.setFontSize(22);
     doc.setTextColor(30, 58, 138); 
-    doc.text("LAPORAN KAS KELAS DIGITAL", 105, 20, { align: "center" });
+    doc.text("LAPORAN KAS KELELAS DIGITAL", 105, 20, { align: "center" });
     
     doc.setFontSize(10);
     doc.setTextColor(100);
@@ -206,12 +210,14 @@ export default function ReportsPage() {
     setIsLoadingAi(true);
     try {
       const allTransactions = [
-        ...data.payments.map(p => ({
-          date: p.weekNumber,
-          type: 'income' as const,
-          amount: p.amount,
-          description: `Setoran Kas Mingguan`
-        })),
+        ...data.payments
+          .filter(p => typeof p.weekNumber === 'string')
+          .map(p => ({
+            date: p.weekNumber,
+            type: 'income' as const,
+            amount: p.amount,
+            description: `Setoran Kas Mingguan`
+          })),
         ...data.expenses.map(e => ({
           date: e.date.split('T')[0],
           type: 'expense' as const,

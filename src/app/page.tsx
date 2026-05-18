@@ -36,6 +36,9 @@ export default function Dashboard() {
   const monthlyData: Record<string, { month: string; income: number; expense: number }> = {};
   
   data.payments.forEach(p => {
+    // Pastikan weekNumber adalah string sebelum di-parse
+    if (typeof p.weekNumber !== 'string') return;
+    
     const dateObj = parseISO(p.weekNumber);
     if (!isValid(dateObj)) return;
     const month = format(dateObj, "yyyy-MM");
@@ -44,6 +47,9 @@ export default function Dashboard() {
   });
 
   data.expenses.forEach(e => {
+    // Pastikan date adalah string
+    if (typeof e.date !== 'string') return;
+    
     const dateObj = parseISO(e.date);
     if (!isValid(dateObj)) return;
     const month = format(dateObj, "yyyy-MM");
@@ -161,8 +167,9 @@ export default function Dashboard() {
                     description = item.description;
                   } else {
                     const student = data.students.find(s => s.id === item.studentId);
-                    const weekDate = parseISO(item.weekNumber);
-                    const formattedWeek = isValid(weekDate) ? format(weekDate, "dd/MM", { locale: id }) : "??";
+                    // Pastikan weekNumber adalah string untuk parseISO
+                    const weekDate = typeof item.weekNumber === 'string' ? parseISO(item.weekNumber) : null;
+                    const formattedWeek = weekDate && isValid(weekDate) ? format(weekDate, "dd/MM", { locale: id }) : "??";
                     description = `Kas ${formattedWeek}: ${student?.name || 'Mahasiswa'}`;
                   }
 
