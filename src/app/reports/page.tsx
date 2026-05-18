@@ -53,7 +53,7 @@ export default function ReportsPage() {
 
     doc.setFontSize(22);
     doc.setTextColor(30, 58, 138); 
-    doc.text("LAPORAN KAS KELELAS DIGITAL", 105, 20, { align: "center" });
+    doc.text("LAPORAN KAS", 105, 20, { align: "center" });
     
     doc.setFontSize(10);
     doc.setTextColor(100);
