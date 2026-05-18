@@ -27,6 +27,7 @@ export default function StudentsPage() {
     payments: [],
     expenses: [],
     weeklyFee: 5000,
+    currentSemester: 1,
   });
 
   const [search, setSearch] = useState("");

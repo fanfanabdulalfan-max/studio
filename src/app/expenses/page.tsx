@@ -17,6 +17,7 @@ export default function ExpensesPage() {
     payments: [],
     expenses: [],
     weeklyFee: 5000,
+    currentSemester: 1,
   });
 
   const [desc, setDesc] = useState("");

@@ -20,6 +20,7 @@ export default function ReportsPage() {
     payments: [],
     expenses: [],
     weeklyFee: 5000,
+    currentSemester: 1,
   });
 
   const [aiReport, setAiReport] = useState<AnalyzeFinancialTrendsOutput | null>(null);
@@ -31,8 +32,6 @@ export default function ReportsPage() {
   const totalExpenses = data.expenses.reduce((sum, e) => sum + e.amount, 0);
   const currentBalance = totalIncome - totalExpenses;
 
-  // Mendapatkan daftar tanggal Minggu unik yang terekam di data, diurutkan kronologis
-  // Pastikan hanya mengambil nilai string yang valid untuk diurutkan
   const recordedSundays = Array.from(new Set(
     data.payments
       .map(p => p.weekNumber)
@@ -52,14 +51,13 @@ export default function ReportsPage() {
       year: 'numeric' 
     });
 
-    // Header Laporan
     doc.setFontSize(22);
     doc.setTextColor(30, 58, 138); 
     doc.text("LAPORAN KAS KELELAS DIGITAL", 105, 20, { align: "center" });
     
     doc.setFontSize(10);
     doc.setTextColor(100);
-    doc.text(`Dicetak pada: ${dateStr}`, 105, 28, { align: "center" });
+    doc.text(`Dicetak pada: ${dateStr} - Semester ${data.currentSemester}`, 105, 28, { align: "center" });
 
     doc.setDrawColor(200);
     doc.line(14, 35, 196, 35);
@@ -72,9 +70,9 @@ export default function ReportsPage() {
       startY: 48,
       head: [['Kategori', 'Jumlah']],
       body: [
-        ['Total Pemasukan', `Rp ${totalIncome.toLocaleString()}`],
-        ['Total Pengeluaran', `Rp ${totalExpenses.toLocaleString()}`],
-        ['Saldo Akhir (Cash on Hand)', `Rp ${currentBalance.toLocaleString()}`],
+        ['Total Pemasukan', `Rp {totalIncome.toLocaleString()}`],
+        ['Total Pengeluaran', `Rp {totalExpenses.toLocaleString()}`],
+        ['Saldo Akhir (Cash on Hand)', `Rp {currentBalance.toLocaleString()}`],
       ],
       theme: 'grid',
       headStyles: { fillColor: [30, 58, 138], textColor: [255, 255, 255] },
@@ -99,7 +97,7 @@ export default function ReportsPage() {
           .filter(p => p.studentId === student.id)
           .reduce((sum, p) => sum + p.amount, 0);
         
-        return [idx + 1, student.nim, student.name, ...studentPayments, `Rp ${total.toLocaleString()}`];
+        return [idx + 1, student.nim, student.name, ...studentPayments, `Rp {total.toLocaleString()}`];
       });
 
       autoTable(doc, {
@@ -126,7 +124,7 @@ export default function ReportsPage() {
         idx + 1,
         new Date(expense.date).toLocaleDateString('id-ID'),
         expense.description,
-        `Rp ${expense.amount.toLocaleString()}`
+        `Rp {expense.amount.toLocaleString()}`
       ]);
 
       autoTable(doc, {
@@ -139,17 +137,16 @@ export default function ReportsPage() {
       });
     }
 
-    // Footer Halaman
     const pageCount = (doc as any).internal.getNumberOfPages();
     for (let i = 1; i <= pageCount; i++) {
       doc.setPage(i);
       doc.setFontSize(8);
       doc.setTextColor(150);
-      doc.text("KasMahasiswa Pro - Laporan Transparan & Digital", 105, 285, { align: "center" });
-      doc.text(`Halaman ${i} dari ${pageCount}`, 196, 285, { align: "right" });
+      doc.text("KasMahasiswa Pro - Semester " + data.currentSemester, 105, 285, { align: "center" });
+      doc.text(`Halaman {i} dari {pageCount}`, 196, 285, { align: "right" });
     }
 
-    doc.save(`Laporan_Kas_Kelas_${new Date().toISOString().split('T')[0]}.pdf`);
+    doc.save(`Laporan_Kas_Semester_{data.currentSemester}_{new Date().toISOString().split('T')[0]}.pdf`);
     toast({ title: "Berhasil", description: "Laporan PDF telah diunduh." });
   };
 
@@ -160,6 +157,8 @@ export default function ReportsPage() {
     }
 
     let csvRows: string[] = [];
+    csvRows.push("LAPORAN KAS MAHASISWA - SEMESTER " + data.currentSemester);
+    csvRows.push("");
 
     if (data.students.length > 0) {
       csvRows.push("REKAPITULASI PEMBAYARAN KAS MAHASISWA (BERDASARKAN TANGGAL)");
@@ -194,7 +193,7 @@ export default function ReportsPage() {
     const url = URL.createObjectURL(blob);
     const link = document.createElement("a");
     link.href = url;
-    link.download = `Laporan_Kas_Lengkap_${new Date().toISOString().split('T')[0]}.csv`;
+    link.download = `Laporan_Kas_Smt_{data.currentSemester}_{new Date().toISOString().split('T')[0]}.csv`;
     document.body.appendChild(link);
     link.click();
     document.body.removeChild(link);
@@ -238,9 +237,15 @@ export default function ReportsPage() {
 
   return (
     <div className="space-y-8 animate-in fade-in duration-500">
-      <div>
-        <h1 className="text-3xl font-bold font-headline text-primary">Laporan & Analisis</h1>
-        <p className="text-muted-foreground">Analisis transparansi keuangan kelas dan ekspor data ke format profesional.</p>
+      <div className="flex justify-between items-start">
+        <div>
+          <h1 className="text-3xl font-bold font-headline text-primary">Laporan & Analisis</h1>
+          <p className="text-muted-foreground">Analisis transparansi keuangan kelas dan ekspor data ke format profesional.</p>
+        </div>
+        <div className="bg-primary/10 text-primary border border-primary/20 px-4 py-2 rounded-lg font-bold flex items-center gap-2">
+          <GraduationCap className="h-5 w-5" />
+          Semester {data.currentSemester}
+        </div>
       </div>
 
       <div className="grid gap-6 md:grid-cols-3">

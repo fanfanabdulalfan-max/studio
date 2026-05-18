@@ -1,4 +1,3 @@
-
 "use client";
 
 import { useState } from "react";
@@ -8,13 +7,14 @@ import { Button } from "@/components/ui/button";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from "@/components/ui/table";
 import { toast } from "@/hooks/use-toast";
-import { Wallet, Search, Filter, CalendarIcon, ChevronLeft, ChevronRight } from "lucide-react";
+import { Wallet, Search, Filter, CalendarIcon, ChevronLeft, ChevronRight, GraduationCap } from "lucide-react";
 import { Input } from "@/components/ui/input";
 import { cn } from "@/lib/utils";
 import { Calendar } from "@/components/ui/calendar";
 import { Popover, PopoverContent, PopoverTrigger } from "@/components/ui/popover";
 import { format, addDays, startOfWeek } from "date-fns";
 import { id } from "date-fns/locale";
+import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
 
 export default function KasPage() {
   const [data, setData, isHydrated] = useLocalStorage<AppData>("kasmahasiswa_data", {
@@ -22,9 +22,9 @@ export default function KasPage() {
     payments: [],
     expenses: [],
     weeklyFee: 5000,
+    currentSemester: 1,
   });
 
-  // Default ke hari Minggu terdekat (awal minggu)
   const [selectedDate, setSelectedDate] = useState<Date>(() => {
     return startOfWeek(new Date(), { weekStartsOn: 0 });
   });
@@ -54,12 +54,16 @@ export default function KasPage() {
         amount: data.weeklyFee,
         date: new Date().toISOString(),
         status: "paid",
+        semester: data.currentSemester,
       };
       setData({
         ...data,
         payments: [...data.payments, newPayment],
       });
-      toast({ title: "Pembayaran Berhasil", description: `Pembayaran tercatat untuk tanggal ${format(selectedDate, 'dd MMM yyyy', { locale: id })}.` });
+      toast({ 
+        title: "Pembayaran Berhasil", 
+        description: `Pembayaran Semester ${data.currentSemester} tercatat untuk tanggal ${format(selectedDate, 'dd MMM yyyy', { locale: id })}.` 
+      });
     }
   };
 
@@ -100,7 +104,7 @@ export default function KasPage() {
                 mode="single"
                 selected={selectedDate}
                 onSelect={(date) => date && setSelectedDate(date)}
-                disabled={(date) => date.getDay() !== 0} // Hanya izinkan hari Minggu
+                disabled={(date) => date.getDay() !== 0}
                 initialFocus
               />
             </PopoverContent>
@@ -122,6 +126,28 @@ export default function KasPage() {
           </CardHeader>
           <CardContent className="space-y-4">
             <div className="space-y-2">
+              <label className="text-xs font-semibold uppercase tracking-wider text-muted-foreground">Pilih Semester</label>
+              <Select 
+                value={data.currentSemester?.toString() || "1"} 
+                onValueChange={(val) => setData({ ...data, currentSemester: parseInt(val) })}
+              >
+                <SelectTrigger className="w-full h-9">
+                  <div className="flex items-center gap-2">
+                    <GraduationCap className="h-4 w-4 text-primary" />
+                    <SelectValue placeholder="Pilih Semester" />
+                  </div>
+                </SelectTrigger>
+                <SelectContent>
+                  {[1, 2, 3, 4, 5, 6, 7, 8, 9].map((s) => (
+                    <SelectItem key={s} value={s.toString()}>
+                      Semester {s}
+                    </SelectItem>
+                  ))}
+                </SelectContent>
+              </Select>
+            </div>
+
+            <div className="space-y-2">
               <label className="text-xs font-semibold uppercase tracking-wider text-muted-foreground">Cari Nama/NIM</label>
               <div className="relative">
                 <Search className="absolute left-2.5 top-2.5 h-4 w-4 text-muted-foreground" />
@@ -133,6 +159,7 @@ export default function KasPage() {
                 />
               </div>
             </div>
+
             <div className="space-y-2">
               <label className="text-xs font-semibold uppercase tracking-wider text-muted-foreground">Nominal (Rp)</label>
               <Input
@@ -148,7 +175,9 @@ export default function KasPage() {
 
         <Card className="md:col-span-3 shadow-sm">
           <CardHeader className="flex flex-row items-center justify-between pb-2 border-b">
-            <CardTitle className="text-lg">Daftar Mahasiswa - {format(selectedDate, "d MMMM yyyy", { locale: id })}</CardTitle>
+            <CardTitle className="text-lg">
+              Daftar Mahasiswa - Semester {data.currentSemester}
+            </CardTitle>
             <div className="bg-accent/10 text-accent px-3 py-1 rounded-full text-xs font-bold">
               Rp {data.weeklyFee.toLocaleString()}/mgg
             </div>

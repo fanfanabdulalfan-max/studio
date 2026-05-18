@@ -3,7 +3,7 @@
 import { useLocalStorage } from "@/hooks/use-local-storage";
 import { AppData } from "@/lib/types";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
-import { Wallet, ArrowDownCircle, ArrowUpCircle, Users, Activity } from "lucide-react";
+import { Wallet, ArrowDownCircle, ArrowUpCircle, Users, Activity, GraduationCap } from "lucide-react";
 import { Skeleton } from "@/components/ui/skeleton";
 import { Bar, BarChart, ResponsiveContainer, XAxis, YAxis, Tooltip, Legend } from "recharts";
 import { cn } from "@/lib/utils";
@@ -16,6 +16,7 @@ export default function Dashboard() {
     payments: [],
     expenses: [],
     weeklyFee: 5000,
+    currentSemester: 1,
   });
 
   if (!isHydrated) {
@@ -36,9 +37,7 @@ export default function Dashboard() {
   const monthlyData: Record<string, { month: string; income: number; expense: number }> = {};
   
   data.payments.forEach(p => {
-    // Pastikan weekNumber adalah string sebelum di-parse
     if (typeof p.weekNumber !== 'string') return;
-    
     const dateObj = parseISO(p.weekNumber);
     if (!isValid(dateObj)) return;
     const month = format(dateObj, "yyyy-MM");
@@ -47,9 +46,7 @@ export default function Dashboard() {
   });
 
   data.expenses.forEach(e => {
-    // Pastikan date adalah string
     if (typeof e.date !== 'string') return;
-    
     const dateObj = parseISO(e.date);
     if (!isValid(dateObj)) return;
     const month = format(dateObj, "yyyy-MM");
@@ -61,9 +58,15 @@ export default function Dashboard() {
 
   return (
     <div className="space-y-8 animate-in fade-in duration-500">
-      <div>
-        <h1 className="text-3xl font-bold font-headline text-primary mb-2">Dashboard Ringkasan</h1>
-        <p className="text-muted-foreground">Selamat datang kembali, Bendahara. Inilah status keuangan kelas hari ini.</p>
+      <div className="flex justify-between items-start">
+        <div>
+          <h1 className="text-3xl font-bold font-headline text-primary mb-2">Dashboard Ringkasan</h1>
+          <p className="text-muted-foreground">Selamat datang kembali, Bendahara. Inilah status keuangan kelas hari ini.</p>
+        </div>
+        <div className="bg-primary text-primary-foreground px-4 py-2 rounded-lg flex items-center gap-2 shadow-sm">
+          <GraduationCap className="h-5 w-5" />
+          <span className="font-bold">Semester {data.currentSemester}</span>
+        </div>
       </div>
 
       <div className="grid gap-4 sm:grid-cols-2 lg:grid-cols-4">
@@ -167,7 +170,6 @@ export default function Dashboard() {
                     description = item.description;
                   } else {
                     const student = data.students.find(s => s.id === item.studentId);
-                    // Pastikan weekNumber adalah string untuk parseISO
                     const weekDate = typeof item.weekNumber === 'string' ? parseISO(item.weekNumber) : null;
                     const formattedWeek = weekDate && isValid(weekDate) ? format(weekDate, "dd/MM", { locale: id }) : "??";
                     description = `Kas ${formattedWeek}: ${student?.name || 'Mahasiswa'}`;

@@ -7,10 +7,11 @@ export interface Student {
 export interface Payment {
   id: string;
   studentId: string;
-  weekNumber: string; // Sekarang menyimpan format YYYY-MM-DD
+  weekNumber: string; // Menyimpan format YYYY-MM-DD
   amount: number;
   date: string;
   status: 'paid' | 'unpaid';
+  semester?: number; // Opsional: Untuk mendukung filter semester di masa depan
 }
 
 export interface Expense {
@@ -25,4 +26,5 @@ export interface AppData {
   payments: Payment[];
   expenses: Expense[];
   weeklyFee: number;
+  currentSemester: number;
 }
