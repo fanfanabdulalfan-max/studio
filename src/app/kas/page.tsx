@@ -1,3 +1,4 @@
+
 "use client";
 
 import { useState } from "react";
@@ -23,6 +24,7 @@ export default function KasPage() {
     weeklyFee: 5000,
   });
 
+  // Default ke hari Minggu terdekat (awal minggu)
   const [selectedDate, setSelectedDate] = useState<Date>(() => {
     return startOfWeek(new Date(), { weekStartsOn: 0 });
   });
@@ -57,7 +59,7 @@ export default function KasPage() {
         ...data,
         payments: [...data.payments, newPayment],
       });
-      toast({ title: "Pembayaran Berhasil", description: `Terima kasih atas pembayarannya.` });
+      toast({ title: "Pembayaran Berhasil", description: `Pembayaran tercatat untuk tanggal ${format(selectedDate, 'dd MMM yyyy', { locale: id })}.` });
     }
   };
 
@@ -75,7 +77,7 @@ export default function KasPage() {
       <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-4">
         <div>
           <h1 className="text-3xl font-bold font-headline text-primary">Input Kas Mingguan</h1>
-          <p className="text-muted-foreground">Catat setoran mingguan mahasiswa berdasarkan tanggal hari Minggu.</p>
+          <p className="text-muted-foreground">Pilih tanggal hari Minggu untuk mencatat setoran mahasiswa.</p>
         </div>
         
         <div className="flex items-center gap-2">
@@ -86,7 +88,7 @@ export default function KasPage() {
           <Popover>
             <PopoverTrigger asChild>
               <Button variant="outline" className={cn(
-                "w-[240px] justify-start text-left font-medium border-primary/20",
+                "w-[260px] justify-start text-left font-medium border-primary/20",
                 !selectedDate && "text-muted-foreground"
               )}>
                 <CalendarIcon className="mr-2 h-4 w-4 text-accent" />
@@ -98,7 +100,7 @@ export default function KasPage() {
                 mode="single"
                 selected={selectedDate}
                 onSelect={(date) => date && setSelectedDate(date)}
-                disabled={(date) => date.getDay() !== 0}
+                disabled={(date) => date.getDay() !== 0} // Hanya izinkan hari Minggu
                 initialFocus
               />
             </PopoverContent>
@@ -139,7 +141,7 @@ export default function KasPage() {
                 onChange={(e) => setData({ ...data, weeklyFee: parseInt(e.target.value) || 0 })}
                 className="h-9"
               />
-              <p className="text-[10px] text-muted-foreground">Akan otomatis digunakan untuk setiap input baru.</p>
+              <p className="text-[10px] text-muted-foreground">Nominal ini akan diterapkan pada setoran baru.</p>
             </div>
           </CardContent>
         </Card>
@@ -192,7 +194,7 @@ export default function KasPage() {
                 ) : (
                   <TableRow>
                     <TableCell colSpan={3} className="h-32 text-center text-muted-foreground">
-                      Tidak ada mahasiswa yang ditemukan.
+                      {search ? "Hasil pencarian tidak ditemukan." : "Tambahkan mahasiswa terlebih dahulu di menu Mahasiswa."}
                     </TableCell>
                   </TableRow>
                 )}

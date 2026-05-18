@@ -1,3 +1,4 @@
+
 "use client";
 
 import { useState } from "react";
@@ -31,12 +32,12 @@ export default function ReportsPage() {
   const totalExpenses = data.expenses.reduce((sum, e) => sum + e.amount, 0);
   const currentBalance = totalIncome - totalExpenses;
 
-  // Mendapatkan daftar tanggal Minggu unik yang terekam di data
+  // Mendapatkan daftar tanggal Minggu unik yang terekam di data, diurutkan kronologis
   const recordedSundays = Array.from(new Set(data.payments.map(p => p.weekNumber))).sort();
 
   const downloadPDF = () => {
     if (data.students.length === 0 && data.expenses.length === 0) {
-      toast({ variant: "destructive", title: "Data Kosong", description: "Tidak ada data untuk diekspor." });
+      toast({ variant: "destructive", title: "Data Kosong", description: "Tidak ada data transaksi untuk diekspor." });
       return;
     }
 
@@ -47,9 +48,10 @@ export default function ReportsPage() {
       year: 'numeric' 
     });
 
+    // Header Laporan
     doc.setFontSize(22);
     doc.setTextColor(30, 58, 138); 
-    doc.text("LAPORAN KAS KELAS", 105, 20, { align: "center" });
+    doc.text("LAPORAN KAS KELAS DIGITAL", 105, 20, { align: "center" });
     
     doc.setFontSize(10);
     doc.setTextColor(100);
@@ -68,7 +70,7 @@ export default function ReportsPage() {
       body: [
         ['Total Pemasukan', `Rp ${totalIncome.toLocaleString()}`],
         ['Total Pengeluaran', `Rp ${totalExpenses.toLocaleString()}`],
-        ['Saldo Akhir', `Rp ${currentBalance.toLocaleString()}`],
+        ['Saldo Akhir (Cash on Hand)', `Rp ${currentBalance.toLocaleString()}`],
       ],
       theme: 'grid',
       headStyles: { fillColor: [30, 58, 138], textColor: [255, 255, 255] },
@@ -76,13 +78,13 @@ export default function ReportsPage() {
     });
 
     if (data.students.length > 0) {
-      doc.text("Rekapitulasi Pembayaran Mahasiswa", 14, (doc as any).lastAutoTable.finalY + 15);
+      doc.text("Rekapitulasi Setoran Minggu Mahasiswa", 14, (doc as any).lastAutoTable.finalY + 15);
       
-      const columns = recordedSundays.map(s => {
+      const dateHeaders = recordedSundays.map(s => {
         const d = parseISO(s);
         return isValid(d) ? format(d, "dd/MM") : s;
       });
-      const headers = ["No", "NIM", "Nama", ...columns, "Total"];
+      const headers = ["No", "NIM", "Nama", ...dateHeaders, "Total"];
       
       const body = data.students.map((student, idx) => {
         const studentPayments = recordedSundays.map(s => {
@@ -101,10 +103,11 @@ export default function ReportsPage() {
         head: [headers],
         body: body,
         theme: 'striped',
-        headStyles: { fillColor: [13, 148, 136], fontSize: 6 },
-        styles: { fontSize: 5 },
+        headStyles: { fillColor: [13, 148, 136], fontSize: 7 },
+        styles: { fontSize: 6, cellPadding: 2 },
         columnStyles: {
-          2: { cellWidth: 20 },
+          1: { cellWidth: 20 },
+          2: { cellWidth: 35 },
           [headers.length - 1]: { fontStyle: 'bold', halign: 'right' }
         }
       });
@@ -113,7 +116,7 @@ export default function ReportsPage() {
     if (data.expenses.length > 0) {
       doc.addPage();
       doc.setFontSize(12);
-      doc.text("Rincian Pengeluaran Kas", 14, 20);
+      doc.text("Rincian Pengeluaran Kas Kelas", 14, 20);
 
       const expenseBody = data.expenses.map((expense, idx) => [
         idx + 1,
@@ -132,6 +135,7 @@ export default function ReportsPage() {
       });
     }
 
+    // Footer Halaman
     const pageCount = (doc as any).internal.getNumberOfPages();
     for (let i = 1; i <= pageCount; i++) {
       doc.setPage(i);
@@ -141,8 +145,8 @@ export default function ReportsPage() {
       doc.text(`Halaman ${i} dari ${pageCount}`, 196, 285, { align: "right" });
     }
 
-    doc.save(`Laporan_Kas_${new Date().toISOString().split('T')[0]}.pdf`);
-    toast({ title: "Berhasil", description: "Laporan PDF telah berhasil dibuat." });
+    doc.save(`Laporan_Kas_Kelas_${new Date().toISOString().split('T')[0]}.pdf`);
+    toast({ title: "Berhasil", description: "Laporan PDF telah diunduh." });
   };
 
   const downloadCSV = () => {
@@ -154,7 +158,7 @@ export default function ReportsPage() {
     let csvRows: string[] = [];
 
     if (data.students.length > 0) {
-      csvRows.push("REKAPITULASI PEMBAYARAN KAS MAHASISWA");
+      csvRows.push("REKAPITULASI PEMBAYARAN KAS MAHASISWA (BERDASARKAN TANGGAL)");
       const headers = ["NIM", "Nama", ...recordedSundays, "Total Bayar"];
       csvRows.push(headers.join(","));
       
@@ -164,7 +168,7 @@ export default function ReportsPage() {
           return p ? p.amount : 0;
         });
         const total = studentPayments.reduce((a, b) => a + b, 0);
-        csvRows.push([`"${student.nim}"`, `"${student.name}"`, ...studentPayments, total].join(","));
+        csvRows.push([`'${student.nim}`, `"${student.name}"`, ...studentPayments, total].join(","));
       });
       csvRows.push(""); csvRows.push(""); 
     }
@@ -186,16 +190,16 @@ export default function ReportsPage() {
     const url = URL.createObjectURL(blob);
     const link = document.createElement("a");
     link.href = url;
-    link.download = `Laporan_Lengkap_Kas_${new Date().toISOString().split('T')[0]}.csv`;
+    link.download = `Laporan_Kas_Lengkap_${new Date().toISOString().split('T')[0]}.csv`;
     document.body.appendChild(link);
     link.click();
     document.body.removeChild(link);
-    toast({ title: "Berhasil", description: "Laporan lengkap (CSV) telah diunduh." });
+    toast({ title: "Berhasil", description: "Laporan lengkap format CSV telah diunduh." });
   };
 
   const handleAiAnalysis = async () => {
     if (data.payments.length === 0 && data.expenses.length === 0) {
-      toast({ variant: "destructive", title: "Data Kurang", description: "Butuh setidaknya beberapa transaksi untuk analisis AI." });
+      toast({ variant: "destructive", title: "Data Kurang", description: "Minimal harus ada beberapa transaksi agar AI bisa menganalisis." });
       return;
     }
 
@@ -206,7 +210,7 @@ export default function ReportsPage() {
           date: p.weekNumber,
           type: 'income' as const,
           amount: p.amount,
-          description: `Kas Mingguan ${p.weekNumber}`
+          description: `Setoran Kas Mingguan`
         })),
         ...data.expenses.map(e => ({
           date: e.date.split('T')[0],
@@ -218,9 +222,9 @@ export default function ReportsPage() {
 
       const result = await analyzeFinancialTrendsAndSuggestBudget({ transactions: allTransactions });
       setAiReport(result);
-      toast({ title: "Analisis Selesai", description: "AI telah selesai menganalisis keuangan kelas Anda." });
+      toast({ title: "Analisis Selesai", description: "Wawasan cerdas telah dihasilkan oleh AI Treasury." });
     } catch (error) {
-      toast({ variant: "destructive", title: "Kesalahan AI", description: "Gagal menghubungkan ke Asisten Keuangan." });
+      toast({ variant: "destructive", title: "Kesalahan AI", description: "Gagal menghubungkan ke layanan AI. Pastikan API Key valid." });
     } finally {
       setIsLoadingAi(false);
     }
@@ -230,7 +234,7 @@ export default function ReportsPage() {
     <div className="space-y-8 animate-in fade-in duration-500">
       <div>
         <h1 className="text-3xl font-bold font-headline text-primary">Laporan & Analisis</h1>
-        <p className="text-muted-foreground">Ekspor data transparan dan dapatkan wawasan cerdas dari AI Treasury.</p>
+        <p className="text-muted-foreground">Analisis transparansi keuangan kelas dan ekspor data ke format profesional.</p>
       </div>
 
       <div className="grid gap-6 md:grid-cols-3">
@@ -238,14 +242,14 @@ export default function ReportsPage() {
           <CardHeader>
             <CardTitle className="flex items-center gap-2">
               <FileText className="h-5 w-5 text-primary" />
-              Ekspor Laporan PDF
+              Laporan PDF
             </CardTitle>
-            <CardDescription>Download rekap berwarna yang mudah dibaca untuk dibagikan ke grup kelas.</CardDescription>
+            <CardDescription>Format rapi siap print untuk dibagikan di grup kelas atau dosen wali.</CardDescription>
           </CardHeader>
           <CardContent className="flex justify-center py-6">
             <Button size="lg" className="w-full" onClick={downloadPDF}>
               <FileText className="mr-2 h-4 w-4" />
-              Download Laporan PDF
+              Download PDF
             </Button>
           </CardContent>
         </Card>
@@ -254,14 +258,14 @@ export default function ReportsPage() {
           <CardHeader>
             <CardTitle className="flex items-center gap-2">
               <Download className="h-5 w-5 text-slate-600" />
-              Ekspor Format CSV
+              Laporan CSV
             </CardTitle>
-            <CardDescription>Unduh data mentah dalam format CSV untuk diolah kembali di Excel.</CardDescription>
+            <CardDescription>Data mentah format spreadsheet untuk diolah manual di Excel atau Google Sheets.</CardDescription>
           </CardHeader>
           <CardContent className="flex justify-center py-6">
             <Button variant="outline" size="lg" className="w-full" onClick={downloadCSV}>
               <Download className="mr-2 h-4 w-4" />
-              Download Laporan CSV
+              Download CSV
             </Button>
           </CardContent>
         </Card>
@@ -270,9 +274,9 @@ export default function ReportsPage() {
           <CardHeader>
             <CardTitle className="flex items-center gap-2">
               <Sparkles className="h-5 w-5 text-accent" />
-              AI Treasury Assistant
+              AI Treasury
             </CardTitle>
-            <CardDescription>Gunakan kecerdasan buatan untuk menganalisis tren dan saran anggaran.</CardDescription>
+            <CardDescription>Gunakan kecerdasan buatan untuk mendeteksi tren pengeluaran yang boros.</CardDescription>
           </CardHeader>
           <CardContent className="flex justify-center py-6">
             <Button 
@@ -282,7 +286,7 @@ export default function ReportsPage() {
               disabled={isLoadingAi}
             >
               {isLoadingAi ? <Loader2 className="mr-2 h-4 w-4 animate-spin" /> : <Sparkles className="mr-2 h-4 w-4" />}
-              Analisis dengan AI
+              Analisis AI
             </Button>
           </CardContent>
         </Card>
@@ -292,7 +296,7 @@ export default function ReportsPage() {
         <div className="space-y-6 animate-in slide-in-from-top-4 duration-500">
           <h2 className="text-xl font-bold font-headline flex items-center gap-2 text-primary">
             <TrendingUp className="h-6 w-6 text-accent" />
-            Hasil Analisis AI
+            Wawasan Keuangan AI
           </h2>
 
           <div className="grid gap-6 md:grid-cols-3">
@@ -311,7 +315,7 @@ export default function ReportsPage() {
                     <span className="text-sm font-semibold text-destructive">Rp {summary.totalExpenses.toLocaleString()}</span>
                   </div>
                   <div className="pt-2 border-t flex justify-between">
-                    <span className="text-sm font-bold">Net Balance</span>
+                    <span className="text-sm font-bold">Saldo Bulanan</span>
                     <span className={cn("text-sm font-bold", summary.netBalance >= 0 ? "text-accent" : "text-destructive")}>
                       Rp {summary.netBalance.toLocaleString()}
                     </span>
@@ -338,7 +342,7 @@ export default function ReportsPage() {
               <CardHeader>
                 <CardTitle className="text-lg flex items-center gap-2">
                   <Info className="h-5 w-5 text-accent" />
-                  Saran Anggaran
+                  Rekomendasi Bendahara
                 </CardTitle>
               </CardHeader>
               <CardContent>
