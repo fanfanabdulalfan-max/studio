@@ -5,7 +5,7 @@ import { useLocalStorage } from "@/hooks/use-local-storage";
 import { AppData } from "@/lib/types";
 import { Button } from "@/components/ui/button";
 import { Card, CardContent, CardHeader, CardTitle, CardDescription } from "@/components/ui/card";
-import { Download, Sparkles, Loader2, TrendingUp, Info, Activity, FileText } from "lucide-react";
+import { Download, Sparkles, Loader2, TrendingUp, Info, Activity, FileText, GraduationCap } from "lucide-react";
 import { analyzeFinancialTrendsAndSuggestBudget, AnalyzeFinancialTrendsOutput } from "@/ai/flows/analyze-financial-trends-and-suggest-budget";
 import { toast } from "@/hooks/use-toast";
 import { cn } from "@/lib/utils";
@@ -70,9 +70,9 @@ export default function ReportsPage() {
       startY: 48,
       head: [['Kategori', 'Jumlah']],
       body: [
-        ['Total Pemasukan', `Rp {totalIncome.toLocaleString()}`],
-        ['Total Pengeluaran', `Rp {totalExpenses.toLocaleString()}`],
-        ['Saldo Akhir (Cash on Hand)', `Rp {currentBalance.toLocaleString()}`],
+        ['Total Pemasukan', `Rp ${totalIncome.toLocaleString()}`],
+        ['Total Pengeluaran', `Rp ${totalExpenses.toLocaleString()}`],
+        ['Saldo Akhir (Cash on Hand)', `Rp ${currentBalance.toLocaleString()}`],
       ],
       theme: 'grid',
       headStyles: { fillColor: [30, 58, 138], textColor: [255, 255, 255] },
@@ -97,7 +97,7 @@ export default function ReportsPage() {
           .filter(p => p.studentId === student.id)
           .reduce((sum, p) => sum + p.amount, 0);
         
-        return [idx + 1, student.nim, student.name, ...studentPayments, `Rp {total.toLocaleString()}`];
+        return [idx + 1, student.nim, student.name, ...studentPayments, `Rp ${total.toLocaleString()}`];
       });
 
       autoTable(doc, {
@@ -124,7 +124,7 @@ export default function ReportsPage() {
         idx + 1,
         new Date(expense.date).toLocaleDateString('id-ID'),
         expense.description,
-        `Rp {expense.amount.toLocaleString()}`
+        `Rp ${expense.amount.toLocaleString()}`
       ]);
 
       autoTable(doc, {
@@ -143,10 +143,10 @@ export default function ReportsPage() {
       doc.setFontSize(8);
       doc.setTextColor(150);
       doc.text("KasMahasiswa Pro - Semester " + data.currentSemester, 105, 285, { align: "center" });
-      doc.text(`Halaman {i} dari {pageCount}`, 196, 285, { align: "right" });
+      doc.text(`Halaman ${i} dari ${pageCount}`, 196, 285, { align: "right" });
     }
 
-    doc.save(`Laporan_Kas_Semester_{data.currentSemester}_{new Date().toISOString().split('T')[0]}.pdf`);
+    doc.save(`Laporan_Kas_Semester_${data.currentSemester}_${new Date().toISOString().split('T')[0]}.pdf`);
     toast({ title: "Berhasil", description: "Laporan PDF telah diunduh." });
   };
 
@@ -193,7 +193,7 @@ export default function ReportsPage() {
     const url = URL.createObjectURL(blob);
     const link = document.createElement("a");
     link.href = url;
-    link.download = `Laporan_Kas_Smt_{data.currentSemester}_{new Date().toISOString().split('T')[0]}.csv`;
+    link.download = `Laporan_Kas_Smt_${data.currentSemester}_${new Date().toISOString().split('T')[0]}.csv`;
     document.body.appendChild(link);
     link.click();
     document.body.removeChild(link);
