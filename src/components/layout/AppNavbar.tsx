@@ -2,13 +2,15 @@
 
 import Link from "next/link";
 import { usePathname } from "next/navigation";
-import { LayoutDashboard, Users, Wallet, CreditCard, FileBarChart, Menu, Download, Upload } from "lucide-react";
+import { LayoutDashboard, Users, Wallet, CreditCard, FileBarChart, Menu, Download, Upload, Trash2, AlertTriangle } from "lucide-react";
 import { cn } from "@/lib/utils";
 import { Button } from "@/components/ui/button";
 import { useState, useRef } from "react";
 import { Sheet, SheetContent, SheetTrigger, SheetHeader, SheetTitle, SheetDescription } from "@/components/ui/sheet";
 import { toast } from "@/hooks/use-toast";
 import { ScrollArea } from "@/components/ui/scroll-area";
+import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogDescription, DialogFooter, DialogTrigger } from "@/components/ui/dialog";
+import { Input } from "@/components/ui/input";
 
 const navItems = [
   { href: "/", label: "Dashboard", icon: LayoutDashboard },
@@ -21,6 +23,8 @@ const navItems = [
 export function AppNavbar() {
   const pathname = usePathname();
   const [isOpen, setIsOpen] = useState(false);
+  const [isResetOpen, setIsResetOpen] = useState(false);
+  const [resetConfirm, setResetConfirm] = useState("");
   const fileInputRef = useRef<HTMLInputElement>(null);
 
   const handleExportData = () => {
@@ -63,7 +67,6 @@ export function AppNavbar() {
     reader.onload = (e) => {
       try {
         const content = e.target?.result as string;
-        // Basic validation
         const parsed = JSON.parse(content);
         if (!parsed.students || !parsed.payments || !parsed.expenses) {
           throw new Error("Format data tidak valid");
@@ -75,7 +78,6 @@ export function AppNavbar() {
           description: "Data kas telah diperbarui. Memuat ulang halaman...",
         });
         
-        // Refresh page to update all state
         setTimeout(() => {
           window.location.reload();
         }, 1500);
@@ -88,8 +90,28 @@ export function AppNavbar() {
       }
     };
     reader.readAsText(file);
-    // Reset input
     event.target.value = "";
+  };
+
+  const handleResetData = () => {
+    if (resetConfirm !== "RISET") {
+      toast({
+        variant: "destructive",
+        title: "Konfirmasi Salah",
+        description: "Harap ketik 'RISET' dengan benar.",
+      });
+      return;
+    }
+
+    localStorage.removeItem("kasmahasiswa_data");
+    toast({
+      title: "Data Dihapus",
+      description: "Seluruh data telah dibersihkan. Memulai ulang aplikasi...",
+    });
+
+    setTimeout(() => {
+      window.location.reload();
+    }, 1500);
   };
 
   return (
@@ -137,6 +159,51 @@ export function AppNavbar() {
               <Upload className="h-3.5 w-3.5 mr-1" />
               Import
             </Button>
+            
+            <Dialog open={isResetOpen} onOpenChange={setIsResetOpen}>
+              <DialogTrigger asChild>
+                <Button 
+                  variant="ghost" 
+                  size="sm" 
+                  className="text-xs h-8 text-red-300 hover:bg-red-500/20 hover:text-red-200"
+                >
+                  <Trash2 className="h-3.5 w-3.5 mr-1" />
+                  Reset
+                </Button>
+              </DialogTrigger>
+              <DialogContent className="sm:max-w-[425px]">
+                <DialogHeader>
+                  <DialogTitle className="flex items-center gap-2 text-destructive">
+                    <AlertTriangle className="h-5 w-5" />
+                    Reset Semua Data?
+                  </DialogTitle>
+                  <DialogDescription>
+                    Tindakan ini akan menghapus permanen seluruh daftar mahasiswa, riwayat pembayaran, dan catatan pengeluaran.
+                  </DialogDescription>
+                </DialogHeader>
+                <div className="py-4 space-y-4">
+                  <p className="text-sm font-medium">
+                    Ketik <span className="font-bold text-destructive">RISET</span> untuk mengonfirmasi:
+                  </p>
+                  <Input 
+                    value={resetConfirm}
+                    onChange={(e) => setResetConfirm(e.target.value)}
+                    placeholder="Ketik di sini..."
+                    className="border-destructive/30 focus-visible:ring-destructive"
+                  />
+                </div>
+                <DialogFooter>
+                  <Button variant="outline" onClick={() => setIsResetOpen(false)}>Batal</Button>
+                  <Button 
+                    variant="destructive" 
+                    onClick={handleResetData}
+                    disabled={resetConfirm !== "RISET"}
+                  >
+                    Hapus Seluruh Data
+                  </Button>
+                </DialogFooter>
+              </DialogContent>
+            </Dialog>
           </div>
         </nav>
 
@@ -181,8 +248,8 @@ export function AppNavbar() {
                     </Link>
                   ))}
                   
-                  <div className="pt-6 pb-2 px-4">
-                    <p className="text-[10px] text-primary-foreground/40 uppercase tracking-widest font-bold mb-4">Manajemen Data</p>
+                  <div className="pt-6 pb-2 px-4 space-y-4">
+                    <p className="text-[10px] text-primary-foreground/40 uppercase tracking-widest font-bold">Manajemen Data</p>
                     <div className="grid grid-cols-2 gap-2">
                       <Button 
                         variant="outline" 
@@ -207,6 +274,18 @@ export function AppNavbar() {
                         <span className="text-xs">Import JSON</span>
                       </Button>
                     </div>
+                    
+                    <Button 
+                      variant="destructive" 
+                      className="w-full flex items-center justify-center gap-2 h-12"
+                      onClick={() => {
+                        setIsResetOpen(true);
+                        setIsOpen(false);
+                      }}
+                    >
+                      <Trash2 className="h-4 w-4" />
+                      Mulai Baru (Reset)
+                    </Button>
                   </div>
                 </nav>
               </ScrollArea>
@@ -229,6 +308,42 @@ export function AppNavbar() {
         accept=".json"
         onChange={handleFileChange}
       />
+
+      {/* Reset Dialog for Mobile (placed outside to be triggerable) */}
+      <Dialog open={isResetOpen} onOpenChange={setIsResetOpen}>
+        <DialogContent className="sm:max-w-[425px]">
+          <DialogHeader>
+            <DialogTitle className="flex items-center gap-2 text-destructive">
+              <AlertTriangle className="h-5 w-5" />
+              Reset Semua Data?
+            </DialogTitle>
+            <DialogDescription>
+              Tindakan ini akan menghapus permanen seluruh daftar mahasiswa, riwayat pembayaran, dan catatan pengeluaran.
+            </DialogDescription>
+          </DialogHeader>
+          <div className="py-4 space-y-4">
+            <p className="text-sm font-medium">
+              Ketik <span className="font-bold text-destructive">RISET</span> untuk mengonfirmasi:
+            </p>
+            <Input 
+              value={resetConfirm}
+              onChange={(e) => setResetConfirm(e.target.value)}
+              placeholder="Ketik di sini..."
+              className="border-destructive/30 focus-visible:ring-destructive"
+            />
+          </div>
+          <DialogFooter>
+            <Button variant="outline" onClick={() => setIsResetOpen(false)}>Batal</Button>
+            <Button 
+              variant="destructive" 
+              onClick={handleResetData}
+              disabled={resetConfirm !== "RISET"}
+            >
+              Hapus Seluruh Data
+            </Button>
+          </DialogFooter>
+        </DialogContent>
+      </Dialog>
     </header>
   );
 }
