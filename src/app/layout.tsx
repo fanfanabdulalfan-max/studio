@@ -1,3 +1,4 @@
+
 import type { Metadata } from 'next';
 import './globals.css';
 import { AppNavbar } from '@/components/layout/AppNavbar';
@@ -29,7 +30,7 @@ export default function RootLayout({
           {children}
         </main>
         <footer className="py-6 text-center text-muted-foreground text-sm border-t mt-auto">
-          <p>&copy; 2026 KasMahasiswa Pro. Build by Mahasiswa (Universitas Slamat Sri).</p>
+          <p>&copy; 2026 KasMahasiswa Pro. Build by Mahasiswa.</p>
         </footer>
         <Toaster />
       </body>

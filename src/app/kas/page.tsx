@@ -1,3 +1,4 @@
+
 "use client";
 
 import { useState } from "react";
@@ -61,7 +62,7 @@ export default function KasPage() {
         payments: [...data.payments, newPayment],
       });
       toast({ 
-        title: "Pembayaran Berhasil", 
+        title: "Berhasil", 
         description: `Pembayaran Semester ${data.currentSemester} tercatat untuk tanggal ${format(selectedDate, 'dd MMM yyyy', { locale: id })}.` 
       });
     }
@@ -81,7 +82,7 @@ export default function KasPage() {
       <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-4">
         <div>
           <h1 className="text-3xl font-bold font-headline text-primary">Input Kas Mingguan</h1>
-          <p className="text-muted-foreground">Pilih tanggal hari Minggu untuk mencatat setoran mahasiswa.</p>
+          <p className="text-muted-foreground">Pilih hari Minggu untuk mencatat setoran mahasiswa.</p>
         </div>
         
         <div className="flex items-center gap-2">
@@ -91,10 +92,7 @@ export default function KasPage() {
           
           <Popover>
             <PopoverTrigger asChild>
-              <Button variant="outline" className={cn(
-                "w-[260px] justify-start text-left font-medium border-primary/20",
-                !selectedDate && "text-muted-foreground"
-              )}>
+              <Button variant="outline" className="w-[260px] justify-start text-left font-medium border-primary/20">
                 <CalendarIcon className="mr-2 h-4 w-4 text-accent" />
                 {format(selectedDate, "EEEE, d MMM yyyy", { locale: id })}
               </Button>
@@ -121,65 +119,48 @@ export default function KasPage() {
           <CardHeader>
             <CardTitle className="text-base flex items-center gap-2">
               <Filter className="h-4 w-4 text-accent" />
-              Filter & Pengaturan
+              Filter Semester
             </CardTitle>
           </CardHeader>
           <CardContent className="space-y-4">
             <div className="space-y-2">
-              <label className="text-xs font-semibold uppercase tracking-wider text-muted-foreground">Pilih Semester</label>
               <Select 
                 value={data.currentSemester?.toString() || "1"} 
                 onValueChange={(val) => setData({ ...data, currentSemester: parseInt(val) })}
               >
-                <SelectTrigger className="w-full h-9">
+                <SelectTrigger>
                   <div className="flex items-center gap-2">
                     <GraduationCap className="h-4 w-4 text-primary" />
-                    <SelectValue placeholder="Pilih Semester" />
+                    <SelectValue placeholder="Semester" />
                   </div>
                 </SelectTrigger>
                 <SelectContent>
                   {[1, 2, 3, 4, 5, 6, 7, 8, 9].map((s) => (
-                    <SelectItem key={s} value={s.toString()}>
-                      Semester {s}
-                    </SelectItem>
+                    <SelectItem key={s} value={s.toString()}>Semester {s}</SelectItem>
                   ))}
                 </SelectContent>
               </Select>
             </div>
 
             <div className="space-y-2">
-              <label className="text-xs font-semibold uppercase tracking-wider text-muted-foreground">Cari Nama/NIM</label>
               <div className="relative">
                 <Search className="absolute left-2.5 top-2.5 h-4 w-4 text-muted-foreground" />
                 <Input
                   placeholder="Cari mahasiswa..."
-                  className="pl-8 h-9"
+                  className="pl-8"
                   value={search}
                   onChange={(e) => setSearch(e.target.value)}
                 />
               </div>
-            </div>
-
-            <div className="space-y-2">
-              <label className="text-xs font-semibold uppercase tracking-wider text-muted-foreground">Nominal (Rp)</label>
-              <Input
-                type="number"
-                value={data.weeklyFee}
-                onChange={(e) => setData({ ...data, weeklyFee: parseInt(e.target.value) || 0 })}
-                className="h-9"
-              />
-              <p className="text-[10px] text-muted-foreground">Nominal ini akan diterapkan pada setoran baru.</p>
             </div>
           </CardContent>
         </Card>
 
         <Card className="md:col-span-3 shadow-sm">
           <CardHeader className="flex flex-row items-center justify-between pb-2 border-b">
-            <CardTitle className="text-lg">
-              Daftar Mahasiswa - Semester {data.currentSemester}
-            </CardTitle>
+            <CardTitle className="text-lg">Daftar Mahasiswa</CardTitle>
             <div className="bg-accent/10 text-accent px-3 py-1 rounded-full text-xs font-bold">
-              Rp {data.weeklyFee.toLocaleString()}/mgg
+              Rp {data.weeklyFee.toLocaleString()}
             </div>
           </CardHeader>
           <CardContent className="p-0">
@@ -188,7 +169,7 @@ export default function KasPage() {
                 <TableRow>
                   <TableHead className="w-[80px]">No.</TableHead>
                   <TableHead>Mahasiswa</TableHead>
-                  <TableHead className="text-center">Status Bayar</TableHead>
+                  <TableHead className="text-center">Aksi</TableHead>
                 </TableRow>
               </TableHeader>
               <TableBody>
@@ -202,16 +183,13 @@ export default function KasPage() {
                         <TableCell className="font-medium">{index + 1}</TableCell>
                         <TableCell>
                           <div className="font-medium text-primary">{student.name}</div>
-                          <div className="text-[10px] text-muted-foreground font-mono">{student.nim}</div>
+                          <div className="text-[10px] text-muted-foreground">{student.nim}</div>
                         </TableCell>
                         <TableCell className="text-center">
                           <Button
                             variant={isPaid ? "default" : "outline"}
                             size="sm"
-                            className={cn(
-                              "w-32 transition-all",
-                              isPaid ? "bg-accent hover:bg-accent/90" : "hover:bg-accent/10 hover:text-accent"
-                            )}
+                            className={cn("w-32", isPaid ? "bg-accent" : "")}
                             onClick={() => togglePayment(student.id)}
                           >
                             {isPaid ? "Sudah Bayar" : "Belum Bayar"}
@@ -223,7 +201,7 @@ export default function KasPage() {
                 ) : (
                   <TableRow>
                     <TableCell colSpan={3} className="h-32 text-center text-muted-foreground">
-                      {search ? "Hasil pencarian tidak ditemukan." : "Tambahkan mahasiswa terlebih dahulu di menu Mahasiswa."}
+                      Belum ada mahasiswa.
                     </TableCell>
                   </TableRow>
                 )}
