@@ -1,10 +1,11 @@
 "use client";
 
 import { useState } from "react";
+import Image from "next/image";
 import { Button } from "@/components/ui/button";
 import { Card, CardContent, CardHeader, CardTitle, CardDescription } from "@/components/ui/card";
 import { Input } from "@/components/ui/input";
-import { Wallet, LogIn, Mail } from "lucide-react";
+import { LogIn, Mail } from "lucide-react";
 import { toast } from "@/hooks/use-toast";
 
 export default function LoginPage() {
@@ -25,9 +26,7 @@ export default function LoginPage() {
       <Card className="w-full max-w-md shadow-lg border-t-4 border-t-primary">
         <CardHeader className="text-center space-y-1">
           <div className="flex justify-center mb-2">
-            <div className="rounded-full bg-accent p-3">
-              <Wallet className="h-8 w-8 text-white" />
-            </div>
+            <Image src="/logo.jpeg" alt="Logo KasMahasiswa" width={72} height={72} className="rounded-full" />
           </div>
           <CardTitle className="text-2xl font-bold font-headline">Akses Bendahara</CardTitle>
           <CardDescription>Masuk untuk mengelola data kas kelas dengan aman di cloud.</CardDescription>
