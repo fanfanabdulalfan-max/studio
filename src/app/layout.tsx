@@ -1,8 +1,16 @@
 
 import type { Metadata } from 'next';
+import { Inter } from 'next/font/google';
 import './globals.css';
 import { AppNavbar } from '@/components/layout/AppNavbar';
 import { Toaster } from '@/components/ui/toaster';
+
+const inter = Inter({
+  subsets: ['latin'],
+  weight: ['300', '400', '500', '600', '700'],
+  display: 'swap',
+  variable: '--font-inter',
+});
 
 export const metadata: Metadata = {
   title: 'KasMahasiswa Pro - Bendahara Kelas Cerdas',
@@ -15,13 +23,9 @@ export default function RootLayout({
   children: React.ReactNode;
 }>) {
   return (
-    <html lang="id" suppressHydrationWarning>
-      <head>
-        <link rel="preconnect" href="https://fonts.googleapis.com" />
-        <link rel="preconnect" href="https://fonts.gstatic.com" crossOrigin="anonymous" />
-        <link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700&display=swap" rel="stylesheet" />
-      </head>
-      <body 
+    <html lang="id" className={inter.variable} suppressHydrationWarning>
+      <head />
+      <body
         className="font-body antialiased min-h-screen flex flex-col bg-background"
         suppressHydrationWarning
       >

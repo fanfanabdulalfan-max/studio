@@ -8,8 +8,6 @@ import { Button } from "@/components/ui/button";
 import { Card, CardContent, CardHeader, CardTitle, CardDescription } from "@/components/ui/card";
 import { Download, FileText, GraduationCap } from "lucide-react";
 import { toast } from "@/hooks/use-toast";
-import jsPDF from "jspdf";
-import autoTable from "jspdf-autotable";
 import { format, parseISO, isValid } from "date-fns";
 import { id } from "date-fns/locale";
 
@@ -34,12 +32,14 @@ export default function ReportsPage() {
       .filter(val => typeof val === 'string')
   )).sort();
 
-  const downloadPDF = () => {
+  const downloadPDF = async () => {
     if (data.students.length === 0 && data.expenses.length === 0) {
       toast({ variant: "destructive", title: "Data Kosong", description: "Tidak ada data untuk diekspor." });
       return;
     }
 
+    const { default: jsPDF } = await import("jspdf");
+    const { default: autoTable } = await import("jspdf-autotable");
     const doc = new jsPDF();
     const dateStr = new Date().toLocaleDateString('id-ID', { day: 'numeric', month: 'long', year: 'numeric' });
 
