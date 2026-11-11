@@ -1,6 +1,7 @@
 "use client";
 
 import Link from "next/link";
+import Image from "next/image";
 import { usePathname } from "next/navigation";
 import { LayoutDashboard, Users, Wallet, CreditCard, FileBarChart, Menu, Download, Upload, Trash2, AlertTriangle } from "lucide-react";
 import { cn } from "@/lib/utils";
@@ -118,9 +119,7 @@ export function AppNavbar() {
     <header className="sticky top-0 z-40 w-full border-b bg-primary text-primary-foreground shadow-sm">
       <div className="container mx-auto flex h-16 items-center justify-between px-4">
         <Link href="/" className="flex items-center gap-2">
-          <div className="rounded-lg bg-accent p-1.5">
-            <Wallet className="h-6 w-6 text-white" />
-          </div>
+          <Image src="/images/kasmahasiswa-logo.png" alt="Logo KasMahasiswa Pro" width={36} height={36} className="h-9 w-9 shrink-0 rounded-lg" priority />
           <span className="text-xl font-bold tracking-tight font-headline">KasMahasiswa <span className="text-accent">Pro</span></span>
         </Link>
 
@@ -223,9 +222,7 @@ export function AppNavbar() {
               
               <div className="p-6 border-b border-white/10 shrink-0">
                 <div className="flex items-center gap-2 mb-1">
-                  <div className="rounded-lg bg-accent p-1">
-                    <Wallet className="h-5 w-5 text-white" />
-                  </div>
+                  <Image src="/images/kasmahasiswa-logo.png" alt="Logo KasMahasiswa Pro" width={28} height={28} className="h-7 w-7 shrink-0 rounded-md" />
                   <span className="text-xl font-bold font-headline">KasMahasiswa <span className="text-accent">Pro</span></span>
                 </div>
                 <p className="text-[10px] text-primary-foreground/60 uppercase tracking-widest font-medium">BENDAHARA DIGITAL</p>
